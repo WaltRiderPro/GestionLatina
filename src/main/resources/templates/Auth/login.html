@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="theme-color" content="#5955D1" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="LayoutDrop" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Iniciar Sesión | FitnessGym</title>
+
+    <link rel="icon" type="image/png" th:href="@{/assets/images/favicon.png}" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      th:href="@{/assets/images/apple-touch-icon.png}"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" th:href="@{/assets/libs/flaticon/css/all/all.css}" />
+    <link rel="stylesheet" th:href="@{/assets/libs/lucide/lucide.css}" />
+    <link
+      rel="stylesheet"
+      th:href="@{/assets/libs/fontawesome/css/all.min.css}"
+    />
+    <link rel="stylesheet" th:href="@{/assets/libs/simplebar/simplebar.css}" />
+    <link rel="stylesheet" th:href="@{/assets/libs/node-waves/waves.css}" />
+    <link
+      rel="stylesheet"
+      th:href="@{/assets/libs/bootstrap-select/css/bootstrap-select.min.css}"
+    />
+
+    <link rel="stylesheet" th:href="@{/assets/css/styles.css}" />
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <div class="auth-wrapper min-vh-100 px-2">
+        <div class="row g-0 min-vh-100">
+          <div
+            class="col-xl-5 col-lg-6 ms-auto px-sm-4 align-self-center py-4 d-none d-lg-block"
+          >
+            <img
+              th:src="@{/assets/images/auth/vector2.svg}"
+              alt=""
+              class="img-fluid"
+            />
+          </div>
+
+          <div class="col-xl-5 col-lg-6 ms-auto px-sm-4 align-self-center py-4">
+            <div class="card card-body p-4 p-sm-5 maxw-450px m-auto rounded-4">
+              <div class="mb-4 text-center">
+                <a th:href="@{/}" aria-label="FitnessGym logo">
+                  <img
+                    class="visible-light"
+                    th:src="@{/assets/images/logo.svg}"
+                    alt="FitnessGym logo"
+                  />
+                </a>
+              </div>
+
+              <div class="text-center mb-4">
+                <h5 class="mb-1">Bienvenido a FitnessGym</h5>
+                <p>Ingresa tu usuario y contraseña para iniciar sesión.</p>
+              </div>
+
+              <div
+                th:if="${error}"
+                class="alert alert-danger alert-dismissible fade show text-center shadow-sm"
+                role="alert"
+              >
+                <i class="fi fi-rr-triangle-warning me-1"></i>
+                <span th:text="${error}"></span>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                ></button>
+              </div>
+
+              <div
+                th:if="${param.logout != null and param.reason == null}"
+                class="alert alert-success alert-dismissible fade show text-center shadow-sm"
+                role="alert"
+              >
+                <i class="fi fi-rr-check-circle me-1"></i> Has cerrado sesión
+                correctamente.
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                ></button>
+              </div>
+
+              <div
+                th:if="${param.reason != null and param.reason[0] == 'username_changed'}"
+                class="alert alert-info alert-dismissible fade show text-center shadow-sm"
+                role="alert"
+              >
+                <i class="fi fi-rr-info me-1"></i>
+                <strong>Sesión finalizada:</strong> Has modificado tu nombre de
+                usuario. Por favor, inicia sesión con tus nuevas credenciales.
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                ></button>
+              </div>
+
+              <form th:action="@{/login}" method="POST">
+                <div class="mb-4">
+                  <label class="form-label" for="username">Usuario</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    name="username"
+                    placeholder="Ingresa tu usuario"
+                    required
+                  />
+                </div>
+
+                <div class="mb-4">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <label class="form-label mb-0" for="password"
+                      >Contraseña</label
+                    >
+                    <a
+                      th:href="@{/forgot-password}"
+                      class="text-primary text-sm"
+                      >¿Olvidaste tu contraseña?</a
+                    >
+                  </div>
+                  <div class="password-wrapper mt-2">
+                    <input
+                      type="password"
+                      class="form-control password-input"
+                      id="password"
+                      name="password"
+                      placeholder="********"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="toggle-password"
+                      aria-pressed="false"
+                      aria-label="Show password"
+                      title="Show password"
+                    >
+                      <i
+                        class="close fi fi-rr-eye-crossed"
+                        aria-hidden="true"
+                      ></i>
+                      <i class="open fi fi-rr-eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="clearfix mt-5">
+                  <button
+                    type="submit"
+                    class="btn btn-primary waves-effect waves-light w-100 mb-3"
+                  >
+                    Iniciar Sesión
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script th:src="@{/assets/libs/global/global.min.js}"></script>
+    <script th:src="@{/assets/js/appSettings.js}"></script>
+    <script th:src="@{/assets/js/main.js}"></script>
+  </body>
+</html>

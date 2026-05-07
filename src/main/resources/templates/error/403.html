@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="theme-color" content="#5955D1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Acceso Denegado | FitnessGym</title>
+
+    <link rel="icon" type="image/png" th:href="@{/assets/images/favicon.png}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/assets/libs/flaticon/css/all/all.css}" />
+
+    <link rel="stylesheet" th:href="@{/assets/css/styles.css}" />
+  </head>
+
+  <body class="bg-light">
+    <div
+      class="min-vh-100 d-flex flex-column justify-content-center align-items-center p-3"
+    >
+      <div
+        class="card border-0 shadow-sm rounded-4 text-center p-4 p-sm-5 maxw-500px mx-auto"
+      >
+        <div class="mb-4">
+          <div
+            class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle shadow-sm"
+            style="width: 110px; height: 110px"
+          >
+            <i class="fi fi-rr-lock" style="font-size: 3.5rem"></i>
+          </div>
+        </div>
+
+        <h2 class="fw-bolder text-dark mb-3">Acceso Denegado</h2>
+        <p class="text-muted fs-6 mb-5 px-3">
+          Lo sentimos, tu rol actual no tiene los permisos necesarios para
+          acceder a esta función. Si crees que esto es un error, comunícate con
+          el administrador del sistema.
+        </p>
+
+        <a
+          th:href="@{/dashboard}"
+          class="btn btn-primary btn-lg px-4 py-3 shadow-sm rounded-pill fw-medium transition-all w-100"
+        >
+          <i class="fi fi-rr-arrow-left me-2"></i> Volver al Inicio Seguro
+        </a>
+      </div>
+
+      <div class="mt-4 text-muted fs-7">
+        &copy; 2026 FitnessGym. Todos los derechos reservados.
+      </div>
+    </div>
+
+    <script th:src="@{/assets/libs/global/global.min.js}"></script>
+    <script th:src="@{/assets/js/main.js}"></script>
+  </body>
+</html>

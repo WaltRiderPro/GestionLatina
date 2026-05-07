@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Ejemplo de Módulo | FinessGym</title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid">
+          <h1>Ejemplo de Módulo</h1>
+          <p>Este es un ejemplo de contenido para el módulo.</p>
+        </div>
+      </main>
+
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script th:src="@{/assets/js/dashboard/dashboard.js}"></script>
+  </body>
+</html>
