@@ -37,8 +37,22 @@ public class Usuario {
   @Column(nullable = false)
   private String password;
 
-  @Column(nullable = false, length = 100)
-  private String nombreCompleto;
+  // Se dividió nombreCompleto en nombre y apellidos
+  @Column(nullable = false, length = 80)
+  private String nombre;
+
+  @Column(nullable = false, length = 80)
+  private String apellidos;
+
+  @Column(nullable = false, unique = true, length = 8)
+  private String dni;
+
+  @Column(nullable = false, unique = true, length = 100)
+  private String correo;
+
+  // Token exclusivo para restablecer contraseña
+  @Column(name = "reset_token", length = 100)
+  private String resetToken;
 
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "rol_id", nullable = false)

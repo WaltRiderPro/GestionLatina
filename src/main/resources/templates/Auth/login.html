@@ -2,13 +2,13 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="utf-8" />
-    <meta name="theme-color" content="#5955D1" />
+    <meta name="theme-color" content="#E31818" />
     <meta name="robots" content="index, follow" />
-    <meta name="author" content="LayoutDrop" />
+    <meta name="author" content="Polleria Latina" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Iniciar Sesión | FitnessGym</title>
+    <title>Iniciar Sesión | Pollería Latina</title>
 
     <link rel="icon" type="image/png" th:href="@{/assets/images/favicon.png}" />
     <link
@@ -49,7 +49,7 @@
           >
             <img
               th:src="@{/assets/images/auth/vector2.svg}"
-              alt=""
+              alt="Polleria Latina ilustracion"
               class="img-fluid"
             />
           </div>
@@ -57,17 +57,17 @@
           <div class="col-xl-5 col-lg-6 ms-auto px-sm-4 align-self-center py-4">
             <div class="card card-body p-4 p-sm-5 maxw-450px m-auto rounded-4">
               <div class="mb-4 text-center">
-                <a th:href="@{/}" aria-label="FitnessGym logo">
+                <a th:href="@{/}" aria-label="Polleria Latina logo">
                   <img
-                    class="visible-light"
-                    th:src="@{/assets/images/logo.svg}"
-                    alt="FitnessGym logo"
+                    th:src="@{/assets/images/logo_polleria_latina.png}"
+                    alt="Pollería Latina logo"
+                    style="max-width: 160px; height: auto"
                   />
                 </a>
               </div>
 
               <div class="text-center mb-4">
-                <h5 class="mb-1">Bienvenido a FitnessGym</h5>
+                <h5 class="mb-1">Bienvenido a Pollería Latina</h5>
                 <p>Ingresa tu usuario y contraseña para iniciar sesión.</p>
               </div>
 
@@ -167,8 +167,24 @@
                     </button>
                   </div>
                 </div>
+                <div class="mb-4">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="remember-me"
+                      name="remember-me"
+                    />
+                    <label
+                      class="form-check-label text-muted"
+                      for="remember-me"
+                    >
+                      Mantener sesión iniciada
+                    </label>
+                  </div>
+                </div>
 
-                <div class="clearfix mt-5">
+                <div class="clearfix mt-4">
                   <button
                     type="submit"
                     class="btn btn-primary waves-effect waves-light w-100 mb-3"
