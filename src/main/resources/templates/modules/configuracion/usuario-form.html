@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo} + ' | Pollería Latina'">Formulario de Usuario</title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          
+          <!-- Si hubo error de validación (DNI repetido, etc.) sale aquí -->
+          <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fi fi-rr-triangle-warning me-1"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+
+          <div class="card shadow-sm border-0 max-w-800px mx-auto">
+            <div class="card-header  border-bottom py-3">
+              <h5 class="mb-0 fw-bold text-dark" th:text="${titulo}">Formulario de Usuario</h5>
+            </div>
+            
+            <div class="card-body p-4">
+              <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="post">
+                
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{activo}" />
+                <input type="hidden" th:field="*{eliminado}" />
+
+                <!-- SECCIÓN: DATOS PERSONALES -->
+                <h6 class="fw-bold text-primary mb-3"><i class="fi fi-rr-id-badge me-2"></i>Datos Personales</h6>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label text-muted fw-semibold">Nombres</label>
+                    <input type="text" class="form-control" th:field="*{nombre}" placeholder="Ej: Juan Carlos" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted fw-semibold">Apellidos</label>
+                    <input type="text" class="form-control" th:field="*{apellidos}" placeholder="Ej: Perez Sosa" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted fw-semibold">DNI</label>
+                    <!-- maxlength en 20 permite el truco del backend al eliminar -->
+                    <input type="text" class="form-control" th:field="*{dni}" maxlength="20" placeholder="Ej: 74125896" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label text-muted fw-semibold">Correo Electrónico</label>
+                    <input type="email" class="form-control" th:field="*{correo}" placeholder="ejemplo@pollerialatina.com" required>
+                  </div>
+                </div>
+
+                <!-- SECCIÓN: CREDENCIALES Y ROL -->
+                <h6 class="fw-bold text-primary mb-3 border-top pt-4"><i class="fi fi-rr-lock me-2"></i>Credenciales de Acceso</h6>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-4">
+                    <label class="form-label text-muted fw-semibold">Nombre de Usuario (Username)</label>
+                    <input type="text" class="form-control" th:field="*{username}" placeholder="Ej: jperez" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label text-muted fw-semibold">Contraseña</label>
+                    <!-- Si es usuario nuevo, es required. Si es edición, no es required -->
+                    <input type="password" class="form-control" th:field="*{password}" 
+                           th:required="${usuario.id == null}" 
+                           placeholder="********">
+                    <small th:if="${usuario.id != null}" class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                      Déjalo en blanco para mantener la clave actual.
+                    </small>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label text-muted fw-semibold">Rol Asignado</label>
+                    
+                    <!-- Si el usuario es el ADMIN, mostramos el campo bloqueado (solo lectura visual) pero enviamos el ID en un hidden -->
+                    <th:block th:if="${usuario.rol != null and usuario.rol.nombre == 'ADMIN'}">
+                      <input type="text" class="form-control bg-light fw-bold text-dark" value="ADMINISTRADOR SUPREMO" readonly>
+                      <input type="hidden" th:field="*{rol.id}">
+                    </th:block>
+
+                    <!-- Si es cualquier otro caso, mostramos el select normal -->
+                    <select class="form-select" th:field="*{rol.id}" required 
+                            th:unless="${usuario.rol != null and usuario.rol.nombre == 'ADMIN'}">
+                      <option value="" disabled selected>Seleccione un rol...</option>
+                      <option th:each="r : ${roles}" th:value="${r.id}" th:text="${r.nombre}"></option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mt-5 text-end">
+                  <a th:href="@{/usuarios}" class="btn btn-light border me-2">Cancelar</a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fi fi-rr-disk me-1"></i> Guardar Usuario
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>

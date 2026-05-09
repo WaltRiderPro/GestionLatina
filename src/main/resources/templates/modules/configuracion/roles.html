@@ -1,0 +1,148 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Roles y Permisos | Pollería Latina</title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <!-- Alertas -->
+          <div
+            th:if="${success}"
+            class="alert alert-success alert-dismissible fade show shadow-sm"
+            role="alert"
+          >
+            <i class="fi fi-rr-check-circle me-1"></i>
+            <span th:text="${success}"></span>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show shadow-sm"
+            role="alert"
+          >
+            <i class="fi fi-rr-triangle-warning me-1"></i>
+            <span th:text="${error}"></span>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <!-- Contenido Principal -->
+          <div class="card shadow-sm border-0">
+            <div
+              class="card-header border-bottom d-flex justify-content-between align-items-center py-3"
+            >
+              <h5 class="mb-0 fw-bold text-dark" th:text="${titulo}">
+                Gestión de Roles
+              </h5>
+              <a
+                sec:authorize="hasAuthority('ROLES_CREAR')"
+                th:href="@{/roles/nuevo}"
+                class="btn btn-primary"
+              >
+                <i class="fi fi-rr-plus me-1"></i> Nuevo Rol
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-muted">ID</th>
+                      <th class="text-muted">Nombre de Rol</th>
+                      <th class="text-muted">Descripción</th>
+                      <th class="text-muted">Estado</th>
+                      <th class="text-center text-muted">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="rol : ${roles}">
+                      <td
+                        class="fw-semibold text-secondary"
+                        th:text="${rol.id}"
+                      >
+                        1
+                      </td>
+                      <td th:text="${rol.nombre}" class="fw-bold text-primary">
+                        ADMIN
+                      </td>
+                      <td th:text="${rol.descripcion}">Descripción del rol</td>
+                      <td>
+                        <span
+                          th:if="${rol.activo}"
+                          class="badge bg-success-subtle text-success px-2 py-1 rounded-pill"
+                          >Activo</span
+                        >
+                        <span
+                          th:unless="${rol.activo}"
+                          class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill"
+                          >Inactivo</span
+                        >
+                      </td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                          <a
+                            sec:authorize="hasAuthority('ROLES_EDITAR')"
+                            th:href="@{/roles/editar/} + ${rol.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Editar"
+                          >
+                            <i class="fi fi-rr-edit text-primary"></i>
+                          </a>
+                          <a
+                            sec:authorize="hasAuthority('ROLES_EDITAR')"
+                            th:href="@{/roles/estado/} + ${rol.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Cambiar Estado"
+                          >
+                            <i class="fi fi-rr-power text-warning"></i>
+                          </a>
+                          <a
+                            sec:authorize="hasAuthority('ROLES_ELIMINAR')"
+                            th:href="@{/roles/eliminar/} + ${rol.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Eliminar"
+                            onclick="
+                              return confirm(
+                                '¿Estás seguro de eliminar este rol?',
+                              );
+                            "
+                          >
+                            <i class="fi fi-rr-trash text-danger"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>

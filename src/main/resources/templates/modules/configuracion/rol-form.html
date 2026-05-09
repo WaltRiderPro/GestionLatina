@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo} + ' | Pollería Latina'">Formulario de Rol</title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-header  border-bottom py-3">
+              <h5 class="mb-0 fw-bold text-dark" th:text="${titulo}">
+                Formulario de Rol
+              </h5>
+            </div>
+
+            <div class="card-body p-4">
+              <form
+                th:action="@{/roles/guardar}"
+                th:object="${wrapper}"
+                method="post"
+              >
+                <!-- Campos ocultos vitales -->
+                <input type="hidden" th:field="*{rol.id}" />
+                <input type="hidden" th:field="*{rol.activo}" />
+                <input type="hidden" th:field="*{rol.eliminado}" />
+
+                <div class="row g-4 mb-4">
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold text-muted"
+                      >Nombre del Rol</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control text-uppercase"
+                      th:field="*{rol.nombre}"
+                      placeholder="Ej: CAJERO"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-8">
+                    <label class="form-label fw-semibold text-muted"
+                      >Descripción Corta</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      th:field="*{rol.descripcion}"
+                      placeholder="Ej: Encargado de cobrar y emitir boletas"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-3 mt-5">
+                  <h6 class="fw-bold mb-0 text-dark">
+                    Matriz de Permisos del Sistema
+                  </h6>
+                  <div class="ms-3 border-top flex-grow-1"></div>
+                </div>
+
+                <div class="table-responsive rounded border">
+                  <table
+                    class="table table-hover text-center align-middle mb-0"
+                  >
+                    <thead class="table-light">
+                      <tr>
+                        <th class="text-start ps-4 text-muted">
+                          Módulo del Sistema
+                        </th>
+                        <th class="text-muted">Lectura (Ver)</th>
+                        <th class="text-muted">Escritura (Crear)</th>
+                        <th class="text-muted">Edición (Editar)</th>
+                        <th class="text-muted text-danger">
+                          Eliminación (Eliminar)
+                        </th>
+
+                        <!-- NUEVO: CHECKBOX MAESTRO -->
+                        <th class="bg-primary-subtle text-primary border-start">
+                          <div
+                            class="form-check d-flex justify-content-center mb-0"
+                            title="Marcar/Desmarcar Todo"
+                          >
+                            <input
+                              class="form-check-input shadow-none border-primary"
+                              type="checkbox"
+                              id="checkMaster"
+                              onchange="toggleAll(this)"
+                            />
+                            <label
+                              class="form-check-label ms-2 small fw-bold cursor-pointer"
+                              for="checkMaster"
+                              >TODOS</label
+                            >
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="dto, stat : *{permisos}">
+                        <td class="text-start ps-4 fw-semibold text-dark">
+                          <!-- Campos ocultos para no perder data -->
+                          <input
+                            type="hidden"
+                            th:field="*{permisos[__${stat.index}__].permisoId}"
+                          />
+                          <input
+                            type="hidden"
+                            th:field="*{permisos[__${stat.index}__].nombreModulo}"
+                          />
+                          <input
+                            type="hidden"
+                            th:field="*{permisos[__${stat.index}__].agrupamiento}"
+                          />
+
+                          <i
+                            class="fi fi-rr-apps text-primary me-2 opacity-50"
+                          ></i>
+                          <span th:text="${dto.nombreModulo}">MÓDULO</span>
+                        </td>
+                        <!-- Checkboxes Mágicos -->
+                        <td>
+                          <div class="form-check d-flex justify-content-center">
+                            <input
+                              class="form-check-input permission-cb"
+                              type="checkbox"
+                              th:field="*{permisos[__${stat.index}__].ver}"
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div class="form-check d-flex justify-content-center">
+                            <input
+                              class="form-check-input permission-cb"
+                              type="checkbox"
+                              th:field="*{permisos[__${stat.index}__].crear}"
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div class="form-check d-flex justify-content-center">
+                            <input
+                              class="form-check-input permission-cb"
+                              type="checkbox"
+                              th:field="*{permisos[__${stat.index}__].editar}"
+                            />
+                          </div>
+                        </td>
+                        <td>
+                          <div class="form-check d-flex justify-content-center">
+                            <input
+                              class="form-check-input permission-cb border-danger"
+                              type="checkbox"
+                              th:field="*{permisos[__${stat.index}__].eliminar}"
+                            />
+                          </div>
+                        </td>
+                        <!-- NUEVO: CHECKBOX POR FILA -->
+                        <td class="bg-light border-start">
+                          <div class="form-check d-flex justify-content-center">
+                            <input
+                              class="form-check-input row-master-cb border-secondary"
+                              type="checkbox"
+                              title="Marcar fila"
+                              onchange="toggleRow(this)"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mt-4 text-end">
+                  <a th:href="@{/roles}" class="btn btn-light border me-2"
+                    >Cancelar</a
+                  >
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fi fi-rr-disk me-1"></i> Guardar Configuración
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>
+<script>
+      function toggleRow(source) {
+        const row = source.closest('tr');
+        const checkboxes = row.querySelectorAll('.permission-cb');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+        checkMasterStatus(); 
+      }
+
+      function toggleAll(source) {
+        const allCheckboxes = document.querySelectorAll('.permission-cb, .row-master-cb');
+        allCheckboxes.forEach(cb => cb.checked = source.checked);
+      }
+
+      function checkMasterStatus() {
+        const allPerms = document.querySelectorAll('.permission-cb');
+        const master = document.getElementById('checkMaster');
+        const allChecked = Array.from(allPerms).every(cb => cb.checked);
+        if(master) master.checked = allChecked;
+      }
+
+      document.querySelectorAll('.permission-cb').forEach(cb => {
+        cb.addEventListener('change', checkMasterStatus);
+      });
+    </script>
+  </body>
+</html>

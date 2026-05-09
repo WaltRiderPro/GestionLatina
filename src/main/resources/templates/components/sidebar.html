@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <th:block th:fragment="sidebar">
     <aside class="app-menubar-tabs" id="appMenubar">
-<div class="app-navbar-brand">
+      <div class="app-navbar-brand">
         <a class="navbar-brand-logo" th:href="@{/}">
           <img src="/assets/images/logo_polleria_latina.png" alt="Polleria Latina Logo" style="max-width: 45px; height: auto;">
         </a>
@@ -10,7 +10,8 @@
       <div class="app-navbar-tabs" data-simplebar>
         <ul class="nav" id="appMenubarTabs" role="tablist" aria-orientation="vertical">
           
-          <li class="nav-item" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Principal">
+          <!-- TAB PRINCIPAL -->
+          <li class="nav-item" sec:authorize="hasAnyAuthority('DASHBOARD_VER', 'REPORTES_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Principal">
             <a class="menu-link active" href="#principalTab" role="tab" aria-controls="principalTab" aria-selected="true" data-bs-toggle="tab">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path opacity="0.5" d="M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z" stroke="var(--bs-heading-color)" stroke-width="2" />
@@ -19,7 +20,8 @@
             </a>
           </li>
 
-          <li class="nav-item" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Operaciones">
+          <!-- TAB OPERACIONES -->
+          <li class="nav-item" sec:authorize="hasAnyAuthority('PUNTO_VENTA_VER', 'COCINA_VER', 'MESAS_VER', 'PEDIDOS_VER', 'CLIENTES_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Operaciones">
             <a class="menu-link" href="#operacionesTab" role="tab" aria-controls="operacionesTab" aria-selected="false" data-bs-toggle="tab">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M21.609 13.5616L21.8382 11.1263C22.0182 9.2137 22.1082 8.25739 21.781 7.86207C21.604 7.64823 21.3633 7.5172 21.106 7.4946C20.6303 7.45282 20.0329 8.1329 18.8381 9.49307C18.2202 10.1965 17.9113 10.5482 17.5666 10.6027C17.3757 10.6328 17.1811 10.6018 17.0047 10.5131C16.6865 10.3529 16.4743 9.91812 16.0499 9.04851L13.8131 4.46485C13.0112 2.82162 12.6102 2 12 2C11.3898 2 10.9888 2.82162 10.1869 4.46486L7.95007 9.04852C7.5257 9.91812 7.31351 10.3529 6.99526 10.5131C6.81892 10.6018 6.62434 10.6328 6.43337 10.6027C6.08872 10.5482 5.77977 10.1965 5.16187 9.49307C3.96708 8.1329 3.36968 7.45282 2.89399 7.4946C2.63666 7.5172 2.39598 7.64823 2.21899 7.86207C1.8918 8.25739 1.9818 9.2137 2.16181 11.1263L2.391 13.5616C2.76865 17.5742 2.95748 19.5805 4.14009 20.7902C5.32271 22 7.09517 22 10.6401 22H13.3599C16.9048 22 18.6773 22 19.8599 20.7902C21.0425 19.5805 21.2313 17.5742 21.609 13.5616Z" stroke="var(--bs-heading-color)" stroke-width="2" />
@@ -28,7 +30,8 @@
             </a>
           </li>
 
-          <li class="nav-item" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Catálogo">
+          <!-- TAB CATÁLOGO -->
+          <li class="nav-item" sec:authorize="hasAnyAuthority('PRODUCTOS_VER', 'CATEGORIAS_VER', 'PRESENTACIONES_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Catálogo">
             <a class="menu-link" href="#catalogoTab" role="tab" aria-controls="catalogoTab" aria-selected="false" data-bs-toggle="tab">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4.97883 9.68508C2.99294 8.89073 2 8.49355 2 8C2 7.50645 2.99294 7.10927 4.97883 6.31492L7.7873 5.19153C9.77318 4.39718 10.7661 4 12 4C13.2339 4 14.2268 4.39718 16.2127 5.19153L19.0212 6.31492C21.0071 7.10927 22 7.50645 22 8C22 8.49355 21.0071 8.89073 19.0212 9.68508L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L4.97883 9.68508Z" stroke="var(--bs-heading-color)" stroke-width="2" />
@@ -40,7 +43,8 @@
 
           <li class="nav-item-hr"></li>
 
-          <li class="nav-item" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Almacén">
+          <!-- TAB ALMACÉN -->
+          <li class="nav-item" sec:authorize="hasAnyAuthority('INSUMOS_VER', 'KARDEX_VER', 'RECETAS_VER', 'UNIDADES_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Almacén">
             <a class="menu-link" href="#almacenTab" role="tab" aria-controls="almacenTab" aria-selected="false" data-bs-toggle="tab">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M5.5 15.5C5.5 14.5572 5.5 14.0858 5.79289 13.7929C6.08579 13.5 6.55719 13.5 7.5 13.5H8.5C9.44281 13.5 9.91421 13.5 10.2071 13.7929C10.5 14.0858 10.5 14.5572 10.5 15.5V16.5C10.5 17.4428 10.5 17.9142 10.2071 18.2071C9.91421 18.5 9.44281 18.5 8.5 18.5C7.08579 18.5 6.37868 18.5 5.93934 18.0607C5.5 17.6213 5.5 16.9142 5.5 15.5Z" stroke="var(--bs-heading-color)" stroke-width="2" />
@@ -51,7 +55,8 @@
             </a>
           </li>
 
-          <li class="nav-item" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Seguridad">
+          <!-- TAB SEGURIDAD -->
+          <li class="nav-item" sec:authorize="hasAnyAuthority('USUARIOS_VER', 'ROLES_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Seguridad">
             <a class="menu-link" href="#seguridadTab" role="tab" aria-controls="seguridadTab" aria-selected="false" data-bs-toggle="tab">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 8C18 11.3137 15.3137 14 12 14C8.68629 14 6 11.3137 6 8C6 4.68629 8.68629 2 12 2C15.3137 2 18 4.68629 18 8Z" stroke="var(--bs-heading-color)" stroke-width="2" />
@@ -60,6 +65,8 @@
               </svg>
             </a>
           </li>
+
+        <!-- BOTÓN SALIR -->
         <li class="nav-item mt-5 mb-3" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Cerrar sesión">
           <form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;"></form>
           <a class="menu-link text-danger" href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit();">
@@ -80,19 +87,20 @@
         <div class="app-content-inner">
           <div class="tab-content" id="appMenubarTabsContent">
             
-            <div class="tab-pane fade show active" id="principalTab" role="tabpanel" tabindex="0">
+            <!-- CONTENIDO: PRINCIPAL -->
+            <div class="tab-pane fade show active" id="principalTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('DASHBOARD_VER', 'REPORTES_VER')">
               <nav class="app-navbar" data-simplebar>
                 <ul class="side-menubar">
                   <li class="menu-heading">
                     <span class="menu-label">Principal</span>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('DASHBOARD_VER')">
                     <a class="menu-link" th:href="@{/dashboard}" role="button">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                       <span class="menu-label">Dashboard</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('REPORTES_VER')">
                     <a class="menu-link" th:href="@{/reportes/ventas}" role="button">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                       <span class="menu-label">Reporte de Ventas</span>
@@ -102,37 +110,38 @@
               </nav>
             </div>
 
-            <div class="tab-pane fade" id="operacionesTab" role="tabpanel" tabindex="0">
+            <!-- CONTENIDO: OPERACIONES -->
+            <div class="tab-pane fade" id="operacionesTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('PUNTO_VENTA_VER', 'COCINA_VER', 'MESAS_VER', 'PEDIDOS_VER', 'CLIENTES_VER')">
               <nav class="app-navbar" data-simplebar>
                 <ul class="side-menubar">
                   <li class="menu-heading">
                     <span class="menu-label">Operaciones</span>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('PUNTO_VENTA_VER')">
                     <a class="menu-link" th:href="@{/punto-venta}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                       <span class="menu-label">Punto de Venta (Caja)</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('COCINA_VER')">
                     <a class="menu-link" th:href="@{/cocina}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
                       <span class="menu-label">Panel de Cocina</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('MESAS_VER')">
                     <a class="menu-link" th:href="@{/mesas}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
                       <span class="menu-label">Gestión de Mesas</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('PEDIDOS_VER')">
                     <a class="menu-link" th:href="@{/pedidos}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
                       <span class="menu-label">Historial de Pedidos</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('CLIENTES_VER')">
                     <a class="menu-link" th:href="@{/clientes}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                       <span class="menu-label">Directorio de Clientes</span>
@@ -142,25 +151,26 @@
               </nav>
             </div>
 
-            <div class="tab-pane fade" id="catalogoTab" role="tabpanel" tabindex="0">
+            <!-- CONTENIDO: CATÁLOGO -->
+            <div class="tab-pane fade" id="catalogoTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('PRODUCTOS_VER', 'CATEGORIAS_VER', 'PRESENTACIONES_VER')">
               <nav class="app-navbar" data-simplebar>
                 <ul class="side-menubar">
                   <li class="menu-heading">
                     <span class="menu-label">Catálogo de Carta</span>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('PRODUCTOS_VER')">
                     <a class="menu-link" th:href="@{/productos}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
                       <span class="menu-label">Productos</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('CATEGORIAS_VER')">
                     <a class="menu-link" th:href="@{/categorias}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
                       <span class="menu-label">Categorías</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('PRESENTACIONES_VER')">
                     <a class="menu-link" th:href="@{/presentaciones}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                       <span class="menu-label">Presentaciones</span>
@@ -170,31 +180,32 @@
               </nav>
             </div>
 
-            <div class="tab-pane fade" id="almacenTab" role="tabpanel" tabindex="0">
+            <!-- CONTENIDO: ALMACÉN -->
+            <div class="tab-pane fade" id="almacenTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('INSUMOS_VER', 'KARDEX_VER', 'RECETAS_VER', 'UNIDADES_VER')">
               <nav class="app-navbar" data-simplebar>
                 <ul class="side-menubar">
                   <li class="menu-heading">
                     <span class="menu-label">Gestión de Almacén</span>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('INSUMOS_VER')">
                     <a class="menu-link" th:href="@{/insumos}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                       <span class="menu-label">Insumos (Stock)</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('KARDEX_VER')">
                     <a class="menu-link" th:href="@{/kardex}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
                       <span class="menu-label">Movimientos (Kardex)</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('RECETAS_VER')">
                     <a class="menu-link" th:href="@{/recetas}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                      <span class="menu-label">Recetas</span>
+                       <span class="menu-label">Recetas</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('UNIDADES_VER')">
                     <a class="menu-link" th:href="@{/unidades-medida}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
                       <span class="menu-label">Unidades de Medida</span>
@@ -204,19 +215,20 @@
               </nav>
             </div>
 
-            <div class="tab-pane fade" id="seguridadTab" role="tabpanel" tabindex="0">
+            <!-- CONTENIDO: SEGURIDAD -->
+            <div class="tab-pane fade" id="seguridadTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('USUARIOS_VER', 'ROLES_VER')">
               <nav class="app-navbar" data-simplebar>
                 <ul class="side-menubar">
                   <li class="menu-heading">
                     <span class="menu-label">Administración</span>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('USUARIOS_VER')">
                     <a class="menu-link" th:href="@{/usuarios}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                       <span class="menu-label">Usuarios del Sistema</span>
                     </a>
                   </li>
-                  <li class="menu-item">
+                  <li class="menu-item" sec:authorize="hasAuthority('ROLES_VER')">
                     <a class="menu-link" th:href="@{/roles}">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       <span class="menu-label">Roles y Permisos</span>

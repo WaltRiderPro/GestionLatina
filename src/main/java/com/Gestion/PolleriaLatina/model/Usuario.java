@@ -44,7 +44,7 @@ public class Usuario {
   @Column(nullable = false, length = 80)
   private String apellidos;
 
-  @Column(nullable = false, unique = true, length = 8)
+  @Column(nullable = false, unique = true, length = 20)
   private String dni;
 
   @Column(nullable = false, unique = true, length = 100)
