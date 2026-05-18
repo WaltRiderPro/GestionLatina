@@ -34,7 +34,7 @@ public class CategoriaController {
     }
 
     @PostMapping("/guardar")
-    public String guardarCategoria(@ModelAttribute Categoria category, RedirectAttributes flash, Model model) {
+    public String guardarCategoria(@ModelAttribute("categoria") Categoria category, RedirectAttributes flash, Model model) {
         try {
             categoriaService.guardar(category);
             flash.addFlashAttribute("success", "La categoría se ha guardado correctamente.");

@@ -64,9 +64,9 @@
                         <span th:unless="${cat.activo}" class="badge bg-secondary">Inactivo</span>
                       </td>
                       <td class="text-center">
-                        <a th:href="@{/catalogo/categorias/eliminar/{id}(id=${cat.id})}" 
-                           class="btn btn-outline-danger btn-sm"
-                           onclick="return confirm('¿Estás seguro de que deseas eliminar lógicamente esta categoría del catálogo?');">
+                        <a th:href="@{/categorias/eliminar/{id}(id=${cat.id})}" 
+                          class="btn btn-outline-danger btn-sm"
+                          onclick="return confirm('¿Estás seguro de que deseas eliminar lógicamente esta categoría del catálogo?');">
                           <i class="fa fa-trash"></i>
                         </a>
                       </td>
@@ -84,7 +84,7 @@
                   <h5 class="modal-title fw-bold">Registrar Nueva Categoría</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form th:action="@{/catalogo/categorias/guardar}" th:object="${categoria}" method="POST">
+                <form th:action="@{/categorias/guardar}" th:object="${categoria}" method="POST">
                   <div class="modal-body">
                     <div class="mb-3">
                       <label class="form-label fw-semibold text-dark">Nombre <span class="text-danger">*</span></label>
