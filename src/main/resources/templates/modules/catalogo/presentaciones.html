@@ -23,11 +23,11 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
                     <div>
-                        <h1 class="h3 mb-0 text-gray-800" th:text="${titulo}">Gestión de Presentaciones</h1>
+                        <h1 class="h3 mb-0 fw-bold" th:text="${titulo}">Gestión de Presentaciones</h1>
                         <p class="text-muted mb-0">Formatos y porciones de venta (Ej: 1/4 Pollo, 1/2 Pollo, Familiar, Jarra)</p>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPresentacion">
+                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPresentacion" onclick="limpiarFormPresentacion()">
                             <i class="fa fa-plus-circle me-1"></i> Nueva Presentación
                         </button>
                     </div>
@@ -42,7 +42,7 @@
                                         <th style="width: 80px;">ID</th>
                                         <th>Nombre del Formato</th>
                                         <th>Estado</th>
-                                        <th class="text-center" style="width: 120px;">Acciones</th>
+                                        <th class="text-center" style="width: 140px;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -51,17 +51,25 @@
                                     </tr>
                                     <tr th:each="pres : ${presentaciones}">
                                         <td th:text="${pres.id}"></td>
-                                        <td class="fw-bold text-dark" th:text="${pres.nombre}"></td>
+                                        <td class="fw-bold" th:text="${pres.nombre}"></td>
                                         <td>
                                             <span th:if="${pres.activo}" class="badge bg-success">Activo</span>
                                             <span th:unless="${pres.activo}" class="badge bg-secondary">Inactivo</span>
                                         </td>
                                         <td class="text-center">
-                                            <a th:href="@{/presentaciones/eliminar/{id}(id=${pres.id})}" 
-                                               class="btn btn-outline-danger btn-sm"
-                                               onclick="return confirm('¿Deseas dar de baja este formato de venta del catálogo?');">
-                                                <i class="fa fa-trash"></i>
-                                            </a>
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <button type="button" class="btn btn-primary shadow btn-xs sharp me-1 text-white"
+                                                        th:data-id="${pres.id}"
+                                                        th:data-nombre="${pres.nombre}"
+                                                        onclick="cargarEditarPresentacion(this)">
+                                                    <i class="fa fa-pencil-alt fa-sm"></i>
+                                                </button>
+                                                <a th:href="@{/presentaciones/eliminar/{id}(id=${pres.id})}" 
+                                                   class="btn btn-danger shadow btn-xs sharp text-white"
+                                                   onclick="return confirm('¿Deseas dar de baja este formato de venta del catálogo?');">
+                                                    <i class="fa fa-trash fa-sm"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -74,19 +82,19 @@
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title fw-bold">Registrar Formato</h5>
+                                <h5 class="modal-title fw-bold" id="modalPresentacionTitle">Registrar Formato</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <form th:action="@{/presentaciones/guardar}" th:object="${presentacion}" method="POST">
+                            <form th:action="@{/presentaciones/guardar}" th:object="${presentacion}" method="POST" id="formPresentacion">
+                                <input type="hidden" th:field="*{id}" id="presId" />
                                 <div class="modal-body">
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold text-dark">Nombre de la Presentación <span class="text-danger">*</span></label>
-                                        <input type="text" th:field="*{nombre}" class="form-control" required placeholder="Ej: 1/4 Pollo, 1/2 Pollo, Familiar, Jarra 1L" />
-                                        <small class="text-muted">Determina cómo se fracciona el producto para la venta en caja y cocina.</small>
+                                        <label class="form-label fw-semibold">Nombre de la Presentación <span class="text-danger">*</span></label>
+                                        <input type="text" th:field="*{nombre}" id="presNombre" class="form-control font-w500" required placeholder="Ej: 1/4 Pollo, 1/2 Pollo, Familiar" />
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-danger light" data-bs-dismiss="modal">Cancelar</button>
                                     <button type="submit" class="btn btn-primary">Guardar Presentación</button>
                                 </div>
                             </form>
@@ -99,5 +107,20 @@
         <th:block th:replace="~{components/footer :: footer}"></th:block>
     </div>
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+        function cargarEditarPresentacion(btn) {
+            document.getElementById('modalPresentacionTitle').innerText = "Actualizar Formato de Venta";
+            document.getElementById('presId').value = btn.getAttribute('data-id');
+            document.getElementById('presNombre').value = btn.getAttribute('data-nombre');
+            const modal = new bootstrap.Modal(document.getElementById('modalPresentacion'));
+            modal.show();
+        }
+        function limpiarFormPresentacion() {
+            document.getElementById('modalPresentacionTitle').innerText = "Registrar Formato";
+            document.getElementById('formPresentacion').reset();
+            document.getElementById('presId').value = "";
+        }
+    </script>
 </body>
 </html>

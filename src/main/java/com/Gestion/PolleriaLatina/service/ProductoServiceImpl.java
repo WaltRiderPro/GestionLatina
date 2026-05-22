@@ -46,18 +46,25 @@ public class ProductoServiceImpl implements ProductoService {
             throw new RuntimeException("Error: El producto debe tener una Presentación obligatoriamente.");
         }
 
+        if (producto.getId() != null) {
+            Producto productoExistente = buscarPorId(producto.getId());
+            producto.setImagenesJson(productoExistente.getImagenesJson()); 
+        }
+
         List<String> listaFotos = new ArrayList<>();
+        boolean hayArchivosNuevos = false;
 
         if (archivos != null && !archivos.isEmpty()) {
             for (MultipartFile archivo : archivos) {
                 if (archivo != null && !archivo.isEmpty()) {
                     String nombreFotoUnico = uploadFileService.guardarImagen(archivo);
                     listaFotos.add(nombreFotoUnico);
+                    hayArchivosNuevos = true;
                 }
             }
         }
 
-        if (!listaFotos.isEmpty()) {
+        if (hayArchivosNuevos) {
             try {
                 String jsonString = objectMapper.writeValueAsString(listaFotos);
                 producto.setImagenesJson(jsonString);
