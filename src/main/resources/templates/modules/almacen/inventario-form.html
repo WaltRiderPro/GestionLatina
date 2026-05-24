@@ -1,0 +1,549 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Ajuste Masivo de Inventario | Pollería Latina</title>
+    <style>
+      #listaInsumosCustom {
+        max-height: 250px;
+        overflow-y: auto;
+        display: none;
+        position: absolute;
+        z-index: 1050;
+        width: 100%;
+        top: 100%;
+        left: 0;
+        margin-top: 0.25rem;
+      }
+      #listaInsumosCustom.show {
+        display: block;
+      }
+      .insumo-option:hover {
+        background-color: var(--bs-primary-bg-subtle) !important;
+      }
+      .cursor-pointer {
+        cursor: pointer;
+      }
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div
+          class="app-page-head d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4"
+        >
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 fw-medium">
+              <li class="breadcrumb-item">
+                <a
+                  th:href="@{/dashboard}"
+                  class="text-muted text-decoration-none"
+                  ><i class="fi fi-rr-home"></i> Inicio</a
+                >
+              </li>
+              <li class="breadcrumb-item active text-dark" aria-current="page">
+                Toma de Inventario Masiva
+              </li>
+            </ol>
+          </nav>
+        </div>
+
+        <div
+          th:if="${success}"
+          class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4"
+          role="alert"
+        >
+          <div class="d-flex align-items-center">
+            <i class="fi fi-rr-check-circle me-2"></i>
+            <span class="fw-medium" th:text="${success}"></span>
+          </div>
+          <button
+            type="button"
+            class="btn-close shadow-none"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div
+          th:if="${error}"
+          class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4"
+          role="alert"
+        >
+          <div class="d-flex align-items-center">
+            <i class="fi fi-rr-triangle-warning me-2"></i>
+            <span class="fw-medium" th:text="${error}"></span>
+          </div>
+          <button
+            type="button"
+            class="btn-close shadow-none"
+            data-bs-dismiss="alert"
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div
+            class="card-header p-4 border-bottom d-flex align-items-center bg-transparent"
+          >
+            <div
+              class="bg-primary bg-opacity-10 text-primary p-2.5 rounded-3 me-3 d-flex align-items-center justify-content-center"
+            >
+              <i class="fi fi-rr-boxes fs-5"></i>
+            </div>
+            <div>
+              <h5
+                class="card-title mb-1 fw-bold text-uppercase tracking-wider"
+                th:text="${titulo}"
+              >
+                Ajuste Masivo de Inventario
+              </h5>
+              <p class="text-muted fs-7 mb-0">
+                Registre múltiples entradas o salidas de insumos y materias
+                primas de un solo golpe operativo hacia el Kardex.
+              </p>
+            </div>
+          </div>
+
+          <div class="card-body p-0">
+            <form
+              th:action="@{/inventarios/guardar}"
+              method="POST"
+              id="formAjusteMasivo"
+              novalidate
+            >
+              <div class="p-4 p-md-5 border-bottom bg-light bg-opacity-50">
+                <h6
+                  class="fw-bold mb-4 text-dark text-uppercase tracking-wide small"
+                >
+                  <i class="fi fi-rr-info text-primary me-2"></i>1. Datos del
+                  Movimiento
+                </h6>
+                <div class="row g-4">
+                  <div class="col-md-4">
+                    <label
+                      class="form-label text-uppercase text-muted fs-7 fw-bold mb-2"
+                      >Tipo de Operación
+                      <span class="text-danger">*</span></label
+                    >
+                    <div
+                      class="d-flex gap-3 p-2 rounded-3 bg-white border border-opacity-50"
+                    >
+                      <div class="form-check m-0 ps-4">
+                        <input
+                          class="form-check-input cursor-pointer"
+                          type="radio"
+                          name="tipoMovimiento"
+                          id="movEntrada"
+                          value="ENTRADA"
+                          checked
+                        />
+                        <label
+                          class="form-check-label fw-bold text-success cursor-pointer fs-7"
+                          for="movEntrada"
+                        >
+                          <i class="fi fi-rr-arrow-circle-down me-1"></i>INGRESO
+                        </label>
+                      </div>
+                      <div class="form-check m-0 ps-4">
+                        <input
+                          class="form-check-input cursor-pointer"
+                          type="radio"
+                          name="tipoMovimiento"
+                          id="movSalida"
+                          value="SALIDA"
+                        />
+                        <label
+                          class="form-check-label fw-bold text-danger cursor-pointer fs-7"
+                          for="movSalida"
+                        >
+                          <i class="fi fi-rr-arrow-circle-up me-1"></i>SALIDA
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <label
+                      class="form-label text-uppercase text-muted fs-7 fw-bold mb-2"
+                      >Motivo <span class="text-danger">*</span></label
+                    >
+                    <select
+                      name="motivo"
+                      class="form-select cursor-pointer shadow-none border"
+                      required
+                    >
+                      <option value="" disabled selected>-- Elija --</option>
+                      <optgroup label="Entradas / Ingresos">
+                        <option value="COMPRA_PROVEEDOR">
+                          Compra a Proveedor / Abastecimiento
+                        </option>
+                        <option value="AJUSTE_INICIAL">
+                          Ajuste de Saldo Inicial / Apertura
+                        </option>
+                        <option value="DEVOLUCION">
+                          Devolución de Cocina o Salón
+                        </option>
+                      </optgroup>
+                      <optgroup label="Salidas / Egresos">
+                        <option value="MERMA">
+                          Merma / Insumo Vencido o Malogrado
+                        </option>
+                        <option value="USO_INTERNO">
+                          Uso Interno (Limpieza / Personal)
+                        </option>
+                        <option value="ROBO_PERDIDA">
+                          Pérdida o Robo Detectado
+                        </option>
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  <div class="col-md-4">
+                    <label
+                      class="form-label text-uppercase text-muted fs-7 fw-bold mb-2"
+                      >Referencia / Comprobante</label
+                    >
+                    <input
+                      type="text"
+                      name="referencia"
+                      class="form-control shadow-none border"
+                      placeholder="Ej: Guía #002-12, Factura o Nota"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-4 p-md-5 border-bottom">
+                <h6
+                  class="fw-bold mb-4 text-dark text-uppercase tracking-wide small"
+                >
+                  <i class="fi fi-rr-search text-primary me-2"></i>2. Buscar
+                  Materias Primas / Insumos
+                </h6>
+
+                <div
+                  class="row g-2 align-items-end bg-primary bg-opacity-10 p-4 rounded-4 border border-primary border-opacity-10"
+                >
+                  <div class="col-md-8 position-relative" id="searchContainer">
+                    <label class="form-label fw-bold text-primary mb-1.5 small"
+                      >Buscar por Nombre del Insumo</label
+                    >
+                    <input
+                      type="text"
+                      id="inputBuscarInsumo"
+                      class="form-control border-0 shadow-sm py-2"
+                      placeholder="Ej: Papa Canchan, Aceite, Pollo Crudo..."
+                      autocomplete="off"
+                    />
+
+                    <input type="hidden" id="hiddenInsumoId" />
+                    <input type="hidden" id="hiddenInsumoNombre" />
+                    <input type="hidden" id="hiddenInsumoUnidad" />
+
+                    <ul
+                      class="dropdown-menu shadow border-0 rounded-3 mt-1"
+                      id="listaInsumosCustom"
+                    >
+                      <li th:each="ins : ${insumos}">
+                        <a
+                          class="dropdown-item py-2 cursor-pointer insumo-option"
+                          th:data-id="${ins.id}"
+                          th:data-name="${ins.nombre}"
+                          th:data-unit="${ins.unidadMedida.abreviatura}"
+                        >
+                          <div
+                            class="fw-bold text-dark font-monospace"
+                            th:text="${ins.nombre}"
+                          >
+                            Nombre Insumo
+                          </div>
+                          <small
+                            class="text-muted"
+                            th:text="'Unidad de stock: ' + ${ins.unidadMedida.abreviatura} + ' | Stock actual: ' + ${ins.stockActual}"
+                          ></small>
+                        </a>
+                      </li>
+                      <li id="noResultsItem" style="display: none">
+                        <span class="dropdown-item text-muted disabled py-2"
+                          >Sin resultados</span
+                        >
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="col-md-2">
+                    <label class="form-label fw-bold text-primary mb-1.5 small"
+                      >Cant.</label
+                    >
+                    <input
+                      type="number"
+                      id="inputTempCantidad"
+                      class="form-control border-0 shadow-sm py-2 text-center fw-bold font-monospace"
+                      step="0.01"
+                      min="0.01"
+                      value="1.00"
+                    />
+                  </div>
+
+                  <div class="col-md-2 d-grid">
+                    <button
+                      type="button"
+                      id="btnAgregarTabla"
+                      class="btn btn-primary shadow-sm py-2 fw-bold d-flex justify-content-center align-items-center"
+                    >
+                      <i class="fi fi-rr-plus me-1"></i> Agregar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-4 p-md-5">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-4"
+                >
+                  <h6
+                    class="fw-bold text-dark text-uppercase tracking-wide small m-0"
+                  >
+                    <i class="fi fi-rr-list text-primary me-2"></i>3. Lista de
+                    Modificaciones
+                  </h6>
+                  <span
+                    class="badge bg-light text-dark border px-2.5 py-1.5 font-monospace fs-7"
+                    id="contadorItems"
+                    >0 Ítems agregados</span
+                  >
+                </div>
+
+                <div
+                  class="table-responsive border rounded-4 overflow-hidden mb-4"
+                >
+                  <table
+                    class="table table-hover align-middle mb-0"
+                    id="tablaDetalles"
+                  >
+                    <thead class="table-light">
+                      <tr>
+                        <th
+                          class="py-3 text-uppercase text-muted fs-7 fw-bold border-0 px-4"
+                        >
+                          Materia Prima / Insumo Seleccionado
+                        </th>
+                        <th
+                          class="py-3 text-uppercase text-muted fs-7 fw-bold border-0 text-center"
+                          width="180"
+                        >
+                          Cantidad a Procesar
+                        </th>
+                        <th
+                          class="text-end py-3 text-uppercase text-muted fs-7 fw-bold border-0 px-4"
+                          width="100"
+                        >
+                          Quitar
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody id="cuerpoTabla">
+                      <tr id="filaVacia">
+                        <td colspan="3" class="text-center py-5 text-muted">
+                          <i
+                            class="fi fi-rr-shopping-cart-add fs-2 d-block mb-2 opacity-50"
+                          ></i>
+                          Busque un insumo arriba y haga clic en "Agregar" para
+                          armar el lote de ajuste.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="d-flex justify-content-end pt-3">
+                  <button
+                    type="submit"
+                    id="btnProcesar"
+                    class="btn btn-dark py-3 px-5 fs-6 fw-bold shadow-sm d-flex align-items-center text-uppercase tracking-wider"
+                    disabled
+                  >
+                    <i class="fi fi-rr-disk me-2"></i> Guardar Inventario Masivo
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const inputBuscar = document.getElementById("inputBuscarInsumo");
+        const hiddenId = document.getElementById("hiddenInsumoId");
+        const hiddenNombre = document.getElementById("hiddenInsumoNombre");
+        const hiddenUnidad = document.getElementById("hiddenInsumoUnidad");
+        const dropdownMenu = document.getElementById("listaInsumosCustom");
+        const opciones = document.querySelectorAll(".insumo-option");
+        const noResults = document.getElementById("noResultsItem");
+
+        const btnAgregar = document.getElementById("btnAgregarTabla");
+        const inputCant = document.getElementById("inputTempCantidad");
+        const cuerpoTabla = document.getElementById("cuerpoTabla");
+        const filaVacia = document.getElementById("filaVacia");
+        const btnProcesar = document.getElementById("btnProcesar");
+        const contadorItems = document.getElementById("contadorItems");
+        const form = document.getElementById("formAjusteMasivo");
+
+        let conteoInsumos = 0;
+
+        // Mostrar / Ocultar Dropdown del Buscador Predictivo
+        inputBuscar.addEventListener("focus", () =>
+          dropdownMenu.classList.add("show"),
+        );
+
+        document.addEventListener("click", function (e) {
+          if (!document.getElementById("searchContainer").contains(e.target)) {
+            dropdownMenu.classList.remove("show");
+            if (!hiddenId.value) inputBuscar.value = "";
+          }
+        });
+
+        // Filtrado dinámico tipográfico en tiempo real
+        inputBuscar.addEventListener("input", function () {
+          const filterText = this.value.toLowerCase().trim();
+          hiddenId.value = "";
+          hiddenNombre.value = "";
+          hiddenUnidad.value = "";
+          dropdownMenu.classList.add("show");
+
+          let matches = 0;
+          opciones.forEach((opcion) => {
+            const name = opcion.getAttribute("data-name").toLowerCase();
+            if (name.includes(filterText)) {
+              opcion.parentElement.style.display = "";
+              matches++;
+            } else {
+              opcion.parentElement.style.display = "none";
+            }
+          });
+          noResults.style.display = matches === 0 ? "block" : "none";
+        });
+
+        // Selección del elemento predictivo
+        opciones.forEach((opcion) => {
+          opcion.addEventListener("click", function (e) {
+            e.preventDefault();
+            const nombreStr = this.getAttribute("data-name");
+            const unidadStr = this.getAttribute("data-unit");
+
+            inputBuscar.value = nombreStr;
+            hiddenNombre.value = nombreStr;
+            hiddenUnidad.value = unidadStr;
+            hiddenId.value = this.getAttribute("data-id");
+
+            dropdownMenu.classList.remove("show");
+            inputCant.focus(); // Salto inteligente a casilla numérica
+          });
+        });
+
+        // Agregar fila al cuerpo de la tabla
+        btnAgregar.addEventListener("click", function () {
+          const id = hiddenId.value;
+          const nombre = hiddenNombre.value;
+          const unidad = hiddenUnidad.value;
+          let cantidad = parseFloat(inputCant.value);
+
+          if (!id || cantidad <= 0 || isNaN(cantidad)) {
+            alert(
+              "Seleccione un insumo válido de la lista predictiva y configure una cantidad mayor a 0.",
+            );
+            return;
+          }
+
+          const filaExistente = document.querySelector(
+            `tr[data-insumo-id='${id}']`,
+          );
+
+          if (filaExistente) {
+            const inputTabla = filaExistente.querySelector(".cant-input-tabla");
+            inputTabla.value = (
+              parseFloat(inputTabla.value) + cantidad
+            ).toFixed(2);
+          } else {
+            if (filaVacia) filaVacia.style.display = "none";
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-insumo-id", id);
+            tr.innerHTML = `
+                <td class="py-3 px-4">
+                    <div class="fw-bold text-dark font-monospace">${nombre}</div>
+                    <input type="hidden" name="insumoId[]" value="${id}">
+                </td>
+                <td class="py-2 text-center">
+                    <div class="input-group input-group-sm mx-auto" style="max-width: 150px;">
+                        <input type="number" step="0.01" name="cantidad[]" class="form-control text-center fw-bold font-monospace cant-input-tabla shadow-none border-secondary" value="${cantidad.toFixed(2)}" min="0.01" required>
+                        <span class="input-group-text bg-light font-monospace small" style="font-size:0.75rem;">${unidad}</span>
+                    </div>
+                </td>
+                <td class="text-end py-2 px-4">
+                    <button type="button" class="btn btn-sm btn-light text-danger btn-quitar px-3 border"><i class="fi fi-rr-trash"></i></button>
+                </td>
+            `;
+            cuerpoTabla.appendChild(tr);
+            conteoInsumos++;
+          }
+
+          // Limpiar triggers
+          inputBuscar.value = "";
+          hiddenId.value = "";
+          hiddenNombre.value = "";
+          hiddenUnidad.value = "";
+          inputCant.value = "1.00";
+          actualizarEstadoFormulario();
+          inputBuscar.focus();
+        });
+
+        // Quitar elementos
+        cuerpoTabla.addEventListener("click", function (e) {
+          if (e.target.closest(".btn-quitar")) {
+            e.target.closest("tr").remove();
+            conteoInsumos--;
+            actualizarEstadoFormulario();
+            if (conteoInsumos === 0 && filaVacia)
+              filaVacia.style.display = "table-row";
+          }
+        });
+
+        function actualizarEstadoFormulario() {
+          contadorItems.textContent = `${conteoInsumos} Insumo${conteoInsumos !== 1 ? "s" : ""} agregado${conteoInsumos !== 1 ? "s" : ""}`;
+          btnProcesar.disabled = conteoInsumos === 0;
+        }
+
+        form.addEventListener("submit", function (event) {
+          if (conteoInsumos === 0) {
+            event.preventDefault();
+            return;
+          }
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add("was-validated");
+        });
+      });
+    </script>
+  </body>
+</html>

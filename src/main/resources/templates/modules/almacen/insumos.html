@@ -1,0 +1,191 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Insumos de Almacén | Pollería Latina</title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div
+            th:if="${success}"
+            class="alert alert-success alert-dismissible fade show shadow-sm border-0"
+            role="alert"
+          >
+            <div class="d-flex align-items-center">
+              <i class="fi fi-rr-check-circle me-2"></i>
+              <span th:text="${success}"></span>
+            </div>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h4
+                class="fw-bold text-uppercase tracking-wider mb-1"
+                th:text="${titulo}"
+              >
+                Inventario de Insumos
+              </h4>
+              <p class="text-muted small mb-0">
+                Control de materias primas, mermas y niveles de reabastecimiento
+                en cocina.
+              </p>
+            </div>
+            <a
+              sec:authorize="hasAuthority('INSUMOS_CREAR')"
+              th:href="@{/insumos/nuevo}"
+              class="btn btn-dark d-flex align-items-center gap-2 shadow-sm"
+            >
+              <i class="fi fi-rr-plus"></i>
+              <span class="fw-semibold">Nuevo Insumo</span>
+            </a>
+          </div>
+
+          <div class="card border shadow-sm">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light text-uppercase fs-7 tracking-wider">
+                    <tr>
+                      <th class="ps-4 text-muted" style="width: 8%">ID</th>
+                      <th class="text-muted" style="width: 37%">
+                        Materia Prima / Insumo
+                      </th>
+                      <th class="text-muted text-center" style="width: 15%">
+                        U. Medida
+                      </th>
+                      <th class="text-muted text-end" style="width: 13%">
+                        Stock Actual
+                      </th>
+                      <th class="text-muted text-end" style="width: 13%">
+                        Stock Mínimo
+                      </th>
+                      <th class="text-muted text-center" style="width: 14%">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      th:each="i : ${insumos}"
+                      th:classappend="${i.stockActual <= i.stockMinimo} ? 'border-start border-3 border-warning' : ''"
+                    >
+                      <td
+                        class="ps-4 text-secondary font-monospace small"
+                        th:text="${i.id}"
+                      >
+                        1
+                      </td>
+
+                      <td>
+                        <div class="fw-bold" th:text="${i.nombre}">
+                          Pollo Entero Crudo
+                        </div>
+                        <div
+                          th:if="${i.stockActual <= i.stockMinimo}"
+                          class="text-warning small fw-semibold d-flex align-items-center gap-1 mt-1"
+                        >
+                          <i class="fi fi-rr-triangle-warning fs-7"></i>
+                          <span>Nivel crítico de existencias</span>
+                        </div>
+                      </td>
+
+                      <td class="text-center">
+                        <span
+                          class="badge bg-light text-dark border px-2.5 py-1.5 font-monospace"
+                          th:text="${i.unidadMedida.abreviatura}"
+                          >Kg</span
+                        >
+                      </td>
+                      <td
+                        class="text-end fw-bold font-monospace fs-6"
+                        th:classappend="${i.stockActual <= i.stockMinimo} ? 'text-warning' : ''"
+                        th:text="${#numbers.formatDecimal(i.stockActual, 1, 'POINT', 2, 'COMMA')}"
+                      >
+                        15.00
+                      </td>
+
+                      <td
+                        class="text-end text-muted font-monospace"
+                        th:text="${#numbers.formatDecimal(i.stockMinimo, 1, 'POINT', 2, 'COMMA')}"
+                      >
+                        5.00
+                      </td>
+
+                      <td class="text-center pe-4">
+                        <div class="d-flex justify-content-center gap-1.5">
+                          <a
+                            sec:authorize="hasAuthority('INSUMOS_EDITAR')"
+                            th:href="@{/insumos/editar/} + ${i.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Editar"
+                          >
+                            <i class="fi fi-rr-edit text-dark"></i>
+                          </a>
+
+                          <a
+                            sec:authorize="hasAuthority('INSUMOS_EDITAR')"
+                            th:href="@{/insumos/estado/} + ${i.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            th:title="${i.activo} ? 'Desactivar' : 'Activar'"
+                          >
+                            <i
+                              class="fi"
+                              th:classappend="${i.activo} ? 'fi-rr-power text-success' : 'fi-rr-refresh text-muted'"
+                            ></i>
+                          </a>
+
+                          <a
+                            sec:authorize="hasAuthority('INSUMOS_ELIMINAR')"
+                            th:href="@{/insumos/eliminar/} + ${i.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Dar de Baja"
+                            onclick="
+                              return confirm(
+                                '¿Está seguro de dar de baja este insumo del almacén?',
+                              );
+                            "
+                          >
+                            <i class="fi fi-rr-trash text-danger"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(insumos)}">
+                      <td colspan="6" class="text-center py-5 text-muted">
+                        <i
+                          class="fi fi-rr-box-open display-6 d-block mb-3 opacity-25"
+                        ></i>
+                        <span class="fw-medium"
+                          >No hay insumos registrados en el almacén.</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>

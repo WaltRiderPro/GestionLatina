@@ -1,0 +1,285 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo} + ' | Pollería Latina'">Unidades de Medida</title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div
+            th:if="${success}"
+            class="alert alert-success alert-dismissible fade show shadow-sm"
+            role="alert"
+          >
+            <i class="fi fi-rr-check-circle me-1"></i>
+            <span th:text="${success}"></span>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show shadow-sm"
+            role="alert"
+          >
+            <i class="fi fi-rr-triangle-warning me-1"></i>
+            <span th:text="${error}"></span>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="card shadow-sm border-0">
+            <div
+              class="card-header d-flex justify-content-between align-items-center py-3"
+            >
+              <h5 class="mb-0 fw-bold" th:text="${titulo}">
+                Unidades de Medida
+              </h5>
+              <button
+                sec:authorize="hasAuthority('UNIDADES_CREAR')"
+                type="button"
+                class="btn btn-primary"
+                onclick="abrirModalCrear()"
+              >
+                <i class="fi fi-rr-plus me-1"></i> Nueva Unidad
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table
+                  class="table table-hover align-middle mb-0"
+                  id="tablaUnidades"
+                >
+                  <thead class="table-light">
+                    <tr>
+                      <th class="text-muted" style="width: 10%">ID</th>
+                      <th class="text-muted" style="width: 50%">
+                        Nombre Completo
+                      </th>
+                      <th class="text-muted text-center" style="width: 15%">
+                        Abreviatura
+                      </th>
+                      <th class="text-muted text-center" style="width: 10%">
+                        Estado
+                      </th>
+                      <th class="text-center text-muted" style="width: 15%">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="um : ${unidades}">
+                      <td
+                        class="text-secondary small id-celda"
+                        th:text="${um.id}"
+                      >
+                        1
+                      </td>
+                      <td class="fw-bold nombre-celda" th:text="${um.nombre}">
+                        Kilogramos
+                      </td>
+                      <td class="text-center">
+                        <span
+                          class="badge bg-secondary-subtle text-secondary px-2 py-1 abreviatura-celda"
+                          th:text="${um.abreviatura}"
+                          >Kg</span
+                        >
+                      </td>
+                      <td class="text-center">
+                        <span
+                          th:if="${um.activo}"
+                          class="badge bg-success-subtle text-success px-2 py-1 rounded-pill"
+                          >Activo</span
+                        >
+                        <span
+                          th:unless="${um.activo}"
+                          class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill"
+                          >Inactivo</span
+                        >
+                      </td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                          <button
+                            sec:authorize="hasAuthority('UNIDADES_EDITAR')"
+                            type="button"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Editar"
+                            th:onclick="'abrirModalEditar(this, ' + ${um.id} + ')'"
+                          >
+                            <i class="fi fi-rr-edit text-primary"></i>
+                          </button>
+                          <a
+                            sec:authorize="hasAuthority('UNIDADES_EDITAR')"
+                            th:href="@{/unidades-medida/estado/} + ${um.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Alternar Estado"
+                          >
+                            <i class="fi fi-rr-power text-warning"></i>
+                          </a>
+                          <a
+                            sec:authorize="hasAuthority('UNIDADES_ELIMINAR')"
+                            th:href="@{/unidades-medida/eliminar/} + ${um.id}"
+                            class="btn btn-sm btn-action-gray rounded-circle"
+                            title="Eliminar"
+                            onclick="
+                              return confirm(
+                                '¿Estás seguro de eliminar esta unidad de medida?',
+                              );
+                            "
+                          >
+                            <i class="fi fi-rr-trash text-danger"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <div
+      class="modal fade"
+      id="modalUnidad"
+      tabindex="-1"
+      aria-labelledby="modalUnidadLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="modalUnidadLabel">
+              Registrar Unidad de Medida
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <form
+            th:action="@{/unidades-medida/guardar}"
+            th:object="${unidadForm}"
+            method="post"
+          >
+            <div class="modal-body py-4">
+              <input type="hidden" id="formId" th:field="*{id}" />
+              <input type="hidden" id="formActivo" th:field="*{activo}" />
+              <input type="hidden" id="formEliminado" th:field="*{eliminado}" />
+
+              <div class="mb-3">
+                <label
+                  for="formNombre"
+                  class="form-label fw-semibold text-muted"
+                  >Nombre de la Unidad</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="formNombre"
+                  th:field="*{nombre}"
+                  placeholder="Ej: Kilogramos, Litros, Unidades"
+                  required
+                />
+              </div>
+
+              <div class="mb-2">
+                <label
+                  for="formAbreviatura"
+                  class="form-label fw-semibold text-muted"
+                  >Abreviatura / Símbolo</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="formAbreviatura"
+                  th:field="*{abreviatura}"
+                  placeholder="Ej: Kg, L, Und"
+                  max="10"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer border-top-0">
+              <button
+                type="button"
+                class="btn btn-light border"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fi fi-rr-disk me-1"></i>Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script th:inline="javascript">
+      let bootstrapModal;
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Inicializamos el componente Modal de Bootstrap
+        bootstrapModal = new bootstrap.Modal(
+          document.getElementById("modalUnidad"),
+        );
+      });
+
+      // Configura el modal para un registro limpio (CREAR)
+      function abrirModalCrear() {
+        document.getElementById("modalUnidadLabel").innerText =
+          "Registrar Unidad de Medida";
+        document.getElementById("formId").value = "";
+        document.getElementById("formNombre").value = "";
+        document.getElementById("formAbreviatura").value = "";
+        document.getElementById("formActivo").value = "true";
+        document.getElementById("formEliminado").value = "false";
+        bootstrapModal.show();
+      }
+
+      // Captura los datos de la fila y los monta en el modal (EDITAR)
+      function abrirModalEditar(button, id) {
+        document.getElementById("modalUnidadLabel").innerText =
+          "Editar Unidad de Medida";
+
+        // Buscamos la fila HTML correspondiente
+        const fila = button.closest("tr");
+        const nombre = fila.querySelector(".nombre-celda").innerText;
+        const abreviatura = fila.querySelector(".abreviatura-celda").innerText;
+
+        // Inyectamos los valores al formulario del modal
+        document.getElementById("formId").value = id;
+        document.getElementById("formNombre").value = nombre;
+        document.getElementById("formAbreviatura").value = abreviatura;
+
+        bootstrapModal.show();
+      }
+    </script>
+  </body>
+</html>

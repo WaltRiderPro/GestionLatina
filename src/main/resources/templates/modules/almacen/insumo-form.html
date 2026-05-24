@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo} + ' | Pollería Latina'">
+      Formulario de Insumo
+    </title>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 max-w-700px mx-auto mb-4"
+            role="alert"
+          >
+            <div class="d-flex align-items-center">
+              <i class="fi fi-rr-triangle-warning me-2"></i>
+              <span th:text="${error}"></span>
+            </div>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="card border shadow-sm max-w-700px mx-auto">
+            <div class="card-header border-bottom py-3">
+              <h5
+                class="mb-0 fw-bold text-uppercase tracking-wider"
+                th:text="${titulo}"
+              >
+                Formulario de Insumo
+              </h5>
+            </div>
+
+            <div class="card-body p-4">
+              <form
+                th:action="@{/insumos/guardar}"
+                th:object="${insumo}"
+                method="post"
+                autocomplete="off"
+              >
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{activo}" />
+                <input type="hidden" th:field="*{eliminado}" />
+
+                <div class="row g-3 mb-4">
+                  <div class="col-md-8">
+                    <label
+                      for="insumoNombre"
+                      class="form-label text-uppercase fw-bold tracking-wide text-secondary small"
+                      >Nombre del Insumo / Insumo Core</label
+                    >
+                    <input
+                      type="text"
+                      id="insumoNombre"
+                      class="form-control form-control-lg shadow-none border"
+                      th:field="*{nombre}"
+                      placeholder="Ej: Papa Canchan, Pechuga de Pollo Cruda"
+                      required
+                    />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label
+                      for="insumoUnidad"
+                      class="form-label text-uppercase fw-bold tracking-wide text-secondary small"
+                      >Unidad de Medida</label
+                    >
+                    <select
+                      id="insumoUnidad"
+                      class="form-select form-select-lg shadow-none border"
+                      th:field="*{unidadMedida.id}"
+                      required
+                    >
+                      <option
+                        value=""
+                        disabled
+                        selected
+                        th:text="'Seleccione...'"
+                      ></option>
+                      <option
+                        th:each="um : ${unidades}"
+                        th:value="${um.id}"
+                        th:text="${um.nombre} + ' (' + ${um.abreviatura} + ')'"
+                      ></option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row g-4 mb-4 pt-3 border-top">
+                  <div class="col-md-6" th:if="${insumo.id != null}">
+                    <label
+                      class="form-label text-uppercase fw-bold tracking-wide text-secondary small"
+                      >Stock Físico Actual</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control form-control-lg font-monospace shadow-none border bg-light fw-bold text-dark"
+                      th:value="${insumo.stockActual} + ' ' + ${insumo.unidadMedida.abreviatura}"
+                      readonly
+                    />
+                    <div class="form-text small text-muted">
+                      Para modificar este stock, debes realizar una Auditoría en
+                      la sección de Toma de Inventario.
+                    </div>
+                  </div>
+
+                  <input
+                    type="hidden"
+                    th:if="${insumo.id == null}"
+                    th:field="*{stockActual}"
+                    value="0.0"
+                  />
+
+                  <div
+                    th:class="${insumo.id != null} ? 'col-md-6' : 'col-md-12'"
+                  >
+                    <label
+                      for="insumoMinimo"
+                      class="form-label text-uppercase fw-bold tracking-wide text-secondary small"
+                      >Umbral Mínimo (Alerta de Quiebre)</label
+                    >
+                    <div class="input-group input-group-lg">
+                      <input
+                        type="number"
+                        id="insumoMinimo"
+                        step="0.01"
+                        class="form-control font-monospace shadow-none border text-danger fw-bold"
+                        th:field="*{stockMinimo}"
+                        required
+                      />
+                    </div>
+                    <div class="form-text small text-muted">
+                      El sistema encenderá un testigo de advertencia cuando las
+                      existencias reales caigan a este nivel.
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="mt-5 pt-3 border-top d-flex justify-content-end gap-2"
+                >
+                  <a
+                    th:href="@{/insumos}"
+                    class="btn btn-light border px-4 fw-medium"
+                    >Cancelar</a
+                  >
+                  <button
+                    type="submit"
+                    class="btn btn-dark px-4 fw-semibold d-flex align-items-center gap-2"
+                  >
+                    <i class="fi fi-rr-disk"></i>
+                    <span>Guardar Configuración</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>

@@ -45,9 +45,12 @@ public class DataSeeder implements CommandLineRunner {
         new String[] { "CATEGORIAS", "Catálogo" },
         new String[] { "PRESENTACIONES", "Catálogo" },
         new String[] { "INSUMOS", "Almacén" },
+        new String[] { "INVENTARIO", "Almacén" },
         new String[] { "KARDEX", "Almacén" },
         new String[] { "RECETAS", "Almacén" },
         new String[] { "UNIDADES", "Almacén" },
+        new String[] { "DELIVERY", "Delivery" },
+        new String[] { "REPARTIDORES", "Delivery" },
         new String[] { "USUARIOS", "Seguridad" },
         new String[] { "ROLES", "Seguridad" });
 
@@ -102,7 +105,7 @@ public class DataSeeder implements CommandLineRunner {
           .build();
 
       usuarioRepository.save(admin);
-      System.out.println("SEMILLA COMPLETADA: Módulos, Rol ADMIN Supremo y Usuario admin generados.");
+      System.out.println("SEMILLA COMPLETADA: Módulos, Rol ADMIN Supremo y Usuario admin generados con Delivery.");
     }
   }
 }

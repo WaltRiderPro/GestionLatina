@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Cronología de Insumo | Pollería Latina</title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div
+            class="app-page-head d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4"
+          >
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0 fw-medium">
+                <li class="breadcrumb-item">
+                  <a
+                    th:href="@{/dashboard}"
+                    class="text-muted text-decoration-none"
+                    ><i class="fi fi-rr-home"></i> Inicio</a
+                  >
+                </li>
+                <li class="breadcrumb-item">
+                  <a
+                    th:href="@{/kardex}"
+                    class="text-muted text-decoration-none"
+                    >Auditoría Kardex</a
+                  >
+                </li>
+                <li
+                  class="breadcrumb-item active text-dark"
+                  aria-current="page"
+                >
+                  Detalle Insumo
+                </li>
+              </ol>
+            </nav>
+            <a
+              th:href="@{/kardex}"
+              class="btn btn-light border fw-semibold shadow-sm text-uppercase font-monospace fs-7"
+            >
+              <i class="fi fi-rr-arrow-left me-1 align-middle"></i> Volver al
+              Kardex Global
+            </a>
+          </div>
+
+          <div
+            th:if="${not #lists.isEmpty(movimientos)}"
+            class="card border border-0 shadow-sm rounded-4 mb-4 overflow-hidden"
+          >
+            <div
+              class="card-body p-4 bg-light bg-opacity-25 d-flex align-items-center border-bottom"
+            >
+              <div
+                class="bg-dark text-white rounded-circle p-3 me-3 shadow-sm d-flex align-items-center justify-content-center"
+                style="width: 55px; height: 55px"
+              >
+                <i class="fi fi-rr-book-open-cover fs-4"></i>
+              </div>
+              <div>
+                <h4
+                  class="fw-bold text-dark text-uppercase tracking-wider mb-1 fs-5"
+                  th:text="${insumo.nombre}"
+                >
+                  Materia Prima
+                </h4>
+                <div
+                  class="d-flex flex-wrap gap-4 text-muted font-monospace fs-7 mt-1"
+                >
+                  <span
+                    ><i class="fi fi-rr-key me-1"></i>ID REF:
+                    <strong class="text-dark" th:text="${insumo.id}"
+                      >--</strong
+                    ></span
+                  >
+                  <span
+                    ><i class="fi fi-rr-scale me-1"></i>MEDIDA BASE:
+                    <strong
+                      class="text-dark"
+                      th:text="${insumo.unidadMedida.nombre} + ' (' + ${insumo.unidadMedida.abreviatura} + ')'"
+                      >--</strong
+                    ></span
+                  >
+                  <span
+                    ><i class="fi fi-rr-box-open me-1"></i>STOCK ACTUAL:
+                    <strong
+                      class="text-dark fs-6"
+                      th:text="${insumo.stockActual} + ' ' + ${insumo.unidadMedida.abreviatura}"
+                      >0.00</strong
+                    ></span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase fs-7 tracking-wider">
+                  <tr>
+                    <th class="py-3 px-4 text-muted">Fecha y Hora</th>
+                    <th class="py-3 text-muted">Documento Transacción</th>
+                    <th class="py-3 text-muted">Tipo</th>
+                    <th class="py-3 text-muted text-end" width="130">
+                      Saldo Anterior
+                    </th>
+                    <th class="py-3 text-muted text-end" width="130">
+                      Variación
+                    </th>
+                    <th class="py-3 text-muted text-end" width="130">
+                      Saldo Nuevo
+                    </th>
+                    <th class="py-3 text-muted ps-4">Usuario Firma</th>
+                    <th class="py-3 text-muted pe-4">Detalle Operación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="mov : ${movimientos}" class="border-bottom">
+                    <td
+                      class="py-3 px-4 font-monospace text-secondary fs-7"
+                      th:text="${#temporals.format(mov.fechaRegistro, 'dd/MM/yyyy - hh:mm a')}"
+                    >
+                      Fecha
+                    </td>
+
+                    <td
+                      class="py-3 fw-bold text-dark font-monospace small"
+                      th:text="${mov.origen}"
+                    >
+                      AJUSTE #1
+                    </td>
+
+                    <td class="py-3">
+                      <span
+                        th:if="${mov.tipoMovimiento.name() == 'ENTRADA'}"
+                        class="badge bg-success-subtle text-success rounded-3 font-monospace fs-8 px-2 py-1"
+                        >ENTRADA</span
+                      >
+                      <span
+                        th:unless="${mov.tipoMovimiento.name() == 'ENTRADA'}"
+                        class="badge bg-secondary-subtle text-dark rounded-3 font-monospace fs-8 px-2 py-1"
+                        >SALIDA</span
+                      >
+                    </td>
+
+                    <td
+                      class="py-3 text-end font-monospace text-secondary"
+                      th:text="${mov.tipoMovimiento.name() == 'ENTRADA' 
+                                  ? #numbers.formatDecimal(mov.stockResultante - mov.cantidad, 1, 2) 
+                                  : #numbers.formatDecimal(mov.stockResultante + mov.cantidad, 1, 2)}"
+                    >
+                      0.00
+                    </td>
+
+                    <td
+                      class="py-3 text-end fw-bold font-monospace fs-6"
+                      th:classappend="${mov.tipoMovimiento.name() == 'ENTRADA'} ? 'text-success' : 'text-dark'"
+                      th:text="${mov.tipoMovimiento.name() == 'ENTRADA' ? '+' : '-'} + ${#numbers.formatDecimal(mov.cantidad, 1, 2)}"
+                    >
+                      +0.00
+                    </td>
+
+                    <td
+                      class="py-3 text-end fw-bold font-monospace text-dark fs-6"
+                      th:text="${#numbers.formatDecimal(mov.stockResultante, 1, 2)}"
+                    >
+                      0.00
+                    </td>
+
+                    <td class="py-3 text-secondary small ps-4">
+                      <i class="fi fi-rr-user text-opacity-50 me-1"></i>
+                      <span
+                        th:text="${mov.usuario.nombre + ' ' + mov.usuario.apellidos}"
+                        >Usuario</span
+                      >
+                    </td>
+
+                    <td
+                      class="py-3 text-muted small pe-4 text-truncate"
+                      style="max-width: 200px"
+                      th:text="${mov.observacion}"
+                    >
+                      Observación
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            th:if="${#lists.isEmpty(movimientos)}"
+            class="card border border-0 shadow-sm rounded-4 mb-4 text-center py-5"
+          >
+            <i
+              class="fi fi-rr-folder-open display-6 text-muted opacity-25 mb-3 d-block"
+            ></i>
+            <h5 class="text-muted fw-bold text-uppercase tracking-wider fs-7">
+              Sin movimientos registrados
+            </h5>
+            <p class="text-muted small">
+              Esta materia prima no registra asientos contables activos dentro
+              del Kardex.
+            </p>
+            <a
+              th:href="@{/insumos}"
+              class="btn btn-dark mt-2 mx-auto font-monospace fs-7 text-uppercase tracking-wide"
+              style="width: fit-content"
+              >Volver al Almacén</a
+            >
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>

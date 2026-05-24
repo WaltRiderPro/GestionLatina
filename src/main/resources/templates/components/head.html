@@ -21,6 +21,20 @@
  <meta name="twitter:title" content="NexLink | CRM Admin Dashboard Template">
  <meta name="twitter:description" content="NexLink is a modern Bootstrap 5 CRM Admin Dashboard Template designed for managing sales, analytics, projects, and team performance with clean UI, responsive layout, and prebuilt pages.">
  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+  (function () {
+   var match = document.cookie.match(/(?:^|; )theme=([^;]+)/);
+   var storedTheme = match ? decodeURIComponent(match[1]) : null;
+   var theme = storedTheme;
+
+   if (!theme) {
+    theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+   }
+
+   document.documentElement.setAttribute("data-bs-theme", theme);
+   document.documentElement.style.colorScheme = theme;
+  })();
+ </script>
  <link rel="icon" type="image/png" th:href="@{/assets/images/favicon.png}">
  <link rel="apple-touch-icon" sizes="180x180" th:href="@{/assets/images/apple-touch-icon.png}">
  <link rel="preconnect" href="https://fonts.googleapis.com">
