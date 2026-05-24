@@ -1,5 +1,9 @@
 package com.Gestion.PolleriaLatina.model;
 
+import java.beans.Transient;
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -16,6 +20,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 @Entity
 @Table(name = "productos")
@@ -55,4 +61,19 @@ public class Producto {
   @Builder.Default
   @Column(nullable = false)
   private boolean eliminado = false;
+
+  @Column(name = "imagenes_json", columnDefinition = "TEXT")
+  private String imagenesJson;
+
+  @Transient
+  public List<String> getListaImagenes(){
+    if (this.imagenesJson == null || this.imagenesJson.isEmpty()){
+      return Collections.emptyList();
+    }
+    try {
+      return new ObjectMapper().readValue(this.imagenesJson, new TypeReference<List<String>>() {});
+    } catch (Exception e) {
+      return Collections.emptyList();
+    }
+  }
 }

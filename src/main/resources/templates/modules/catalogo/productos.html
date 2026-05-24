@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo}">Productos | Pollería Latina</title>
+</head>
+
+<body>
+    <div class="page-layout">
+        <th:block th:replace="~{components/header :: header}"></th:block>
+        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+        <main class="app-wrapper">
+            <div class="container-fluid">
+                
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                    <div>
+                        <h1 class="h3 mb-0 fw-bold th-title" th:text="${titulo}">Catálogo de Productos</h1>
+                        <p class="text-muted mb-0">Gestión de platillos, combos y bebidas de la pollería</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="limpiarFormProducto()">
+                            <i class="fa fa-plus-circle me-1"></i> Nuevo Producto
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="card-title mb-0 fw-bold text-primary">Platillos y Productos Disponibles</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light"> 
+                                    <tr>
+                                        <th style="width: 80px;">Imagen</th>
+                                        <th>Nombre</th>
+                                        <th>Categoría</th>
+                                        <th>Presentación</th> 
+                                        <th>Precio</th>
+                                        <th>Estado</th>
+                                        <th class="text-center" style="width: 120px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(productos)}">
+                                        <td colspan="7" class="text-center text-muted py-4">No hay productos registrados en el sistema.</td>
+                                    </tr>
+                                    <tr th:each="prod : ${productos}">
+                                        <td>
+                                            <img th:src="${prod.getListaImagenes() != null && !prod.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${prod.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}" 
+                                                 alt="Producto" class="rounded shadow-sm" width="55" height="55" style="object-fit: cover;" />
+                                        </td>
+                                        <td class="fw-bold" th:text="${prod.nombre != null} ? ${prod.nombre} : 'Producto sin nombre'"></td>
+                                        <td>
+                                            <span class="badge bg-light text-primary fw-semibold" 
+                                                  th:text="${prod.categoria != null} ? ${prod.categoria.nombre} : 'Sin Categoría'"></span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-secondary fw-semibold" 
+                                                  th:text="${prod.presentacion != null} ? ${prod.presentacion.nombre} : 'Sin Formato'"></span>
+                                        </td>
+                                        <td class="fw-semibold" th:text="${prod.precio != null} ? 'S/ ' + ${#numbers.formatDecimal(prod.precio, 1, 2)} : 'S/ 0.00'"></td>
+                                        <td>
+                                            <span th:if="${prod.activo}" class="badge bg-success">Disponible</span>
+                                            <span th:unless="${prod.activo}" class="badge bg-danger">Agotado</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <button type="button" class="btn btn-primary shadow btn-xs sharp me-1 text-white"
+                                                        th:data-id="${prod.id}"
+                                                        th:data-nombre="${prod.nombre}"
+                                                        th:data-categoria="${prod.categoria != null ? prod.categoria.id : ''}"
+                                                        th:data-presentacion="${prod.presentacion != null ? prod.presentacion.id : ''}"
+                                                        th:data-precio="${prod.precio}"
+                                                        th:data-descripcion="${prod.descripcion}"
+                                                        th:data-imagen="${prod.getListaImagenes() != null && !prod.getListaImagenes().isEmpty() ? prod.getListaImagenes().get(0) : ''}"
+                                                        onclick="cargarEditarProducto(this)">
+                                                    <i class="fa fa-pencil-alt fa-sm"></i>
+                                                </button>
+                                                <a th:href="@{/productos/eliminar/{id}(id=${prod.id})}" 
+                                                   class="btn btn-danger shadow btn-xs sharp text-white"
+                                                   onclick="return confirm('¿Deseas dar de baja este producto del menú?');">
+                                                    <i class="fa fa-trash fa-sm"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold" id="modalProductoTitle">Registrar Ítem en el Menú</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form th:action="@{/productos/guardar}" th:object="${producto}" method="POST" enctype="multipart/form-data" id="formProducto">
+                                <input type="hidden" th:field="*{id}" id="prodId" />
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Nombre del Producto <span class="text-danger">*</span></label>
+                                        <input type="text" th:field="*{nombre}" id="prodNombre" class="form-control font-w500" required placeholder="Ej: 1/4 de Pollo a la Brasa" />
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Categoría de Catálogo <span class="text-danger">*</span></label>
+                                        <select th:field="*{categoria.id}" id="prodCategoria" class="form-select" required>
+                                            <option value="" disabled selected>-- Seleccione una clasificación --</option>
+                                            <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}"></option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Presentación / Formato de Venta <span class="text-danger">*</span></label>
+                                        <select th:field="*{presentacion.id}" id="prodPresentacion" class="form-select" required>
+                                            <option value="" disabled selected>-- Seleccione el formato (Ej: 1/4 Pollo) --</option>
+                                            <option th:each="pres : ${presentaciones}" th:value="${pres.id}" th:text="${pres.nombre}"></option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Precio de Venta (S/) <span class="text-danger">*</span></label>
+                                        <input type="number" step="0.10" min="0" th:field="*{precio}" id="prodPrecio" class="form-control" required placeholder="0.00" />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Descripción corta</label>
+                                        <textarea th:field="*{descripcion}" id="prodDescripcion" class="form-control" rows="2" placeholder="Ingredientes o detalles del plato..."></textarea>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Fotografías del Platillo</label>
+                                        <div id="previewContainer" class="d-flex flex-wrap gap-2 mb-2 p-2 border rounded bg-light" style="min-height: 80px;">
+                                            <p id="galleryPlaceholder" class="text-muted w-100 text-center my-auto font-w500">Ninguna foto seleccionada aún.</p>
+                                        </div>
+
+                                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 font-w600 mb-2" onclick="document.getElementById('imgTriggerInput').click()">
+                                            <i class="fa fa-image me-1"></i> Seleccionar foto para añadir / reemplazar
+                                        </button>
+
+                                        <input type="file" id="imgTriggerInput" class="d-none" accept="image/png, image/jpeg, image/webp" />
+                                        <input type="file" name="files" id="finalBundleInput" class="d-none" multiple />
+                                        <small class="text-muted">Añade fotos una a una, se consolidarán en la BD dentro de tu JSON.</small>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger light" data-bs-dismiss="modal">Cerrar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+        let imageLotMemory = [];
+        const triggerInput = document.getElementById('imgTriggerInput');
+        const bundleInput = document.getElementById('finalBundleInput');
+        const container = document.getElementById('previewContainer');
+        const placeholder = document.getElementById('galleryPlaceholder');
+
+        triggerInput.addEventListener('change', function(e) {
+            if (e.target.files.length === 0) return;
+            const file = e.target.files[0];
+            imageLotMemory.push(file);
+            refreshPhotoQueue();
+            triggerInput.value = ""; 
+        });
+
+        function refreshPhotoQueue() {
+            const dataTransfer = new DataTransfer();
+            container.innerHTML = "";
+
+            if (imageLotMemory.length === 0) {
+                container.appendChild(placeholder);
+                bundleInput.files = dataTransfer.files;
+                return;
+            }
+
+            imageLotMemory.forEach((file, index) => {
+                dataTransfer.items.add(file);
+
+                const div = document.createElement('div');
+                div.className = 'position-relative border rounded shadow-sm bg-white';
+                div.style = 'width: 70px; height: 70px;';
+
+                const img = document.createElement('img');
+                img.style = 'width: 100%; height: 100%; object-fit: cover;';
+                img.className = 'rounded';
+
+                const reader = new FileReader();
+                reader.onload = function(evt) { img.src = evt.target.result; };
+                reader.readAsDataURL(file);
+
+                const closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.className = 'btn btn-danger btn-xs position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center rounded-circle';
+                closeBtn.style = 'width: 18px; height: 18px; transform: translate(35%, -35%); font-size: 11px;';
+                closeBtn.innerText = '×';
+                closeBtn.onclick = function() {
+                    imageLotMemory.splice(index, 1);
+                    refreshPhotoQueue();
+                };
+
+                div.appendChild(img);
+                div.appendChild(closeBtn);
+                container.appendChild(div);
+            });
+
+            bundleInput.files = dataTransfer.files;
+        }
+
+        function cargarEditarProducto(btn) {
+            document.getElementById('modalProductoTitle').innerText = "Actualizar Ítem del Menú";
+            document.getElementById('prodId').value = btn.getAttribute('data-id');
+            document.getElementById('prodNombre').value = btn.getAttribute('data-nombre');
+            document.getElementById('prodCategoria').value = btn.getAttribute('data-categoria');
+            document.getElementById('prodPresentacion').value = btn.getAttribute('data-presentacion');
+            document.getElementById('prodPrecio').value = btn.getAttribute('data-precio');
+            document.getElementById('prodDescripcion').value = btn.getAttribute('data-descripcion');
+            
+            imageLotMemory = [];
+            const imagenGuardada = btn.getAttribute('data-imagen');
+            
+            if (imagenGuardada) {
+                container.innerHTML = "";
+                const div = document.createElement('div');
+                div.className = 'position-relative border border-primary rounded shadow-sm bg-white';
+                div.style = 'width: 70px; height: 70px; opacity: 0.8;';
+                div.innerHTML = `<img src="/uploads/productos/${imagenGuardada}" style="width: 100%; height: 100%; object-fit: cover;" class="rounded"/>`;
+                
+                const textoAyuda = document.createElement('span');
+                textoAyuda.className = "ms-3 my-auto text-primary fw-bold text-1xs";
+                textoAyuda.innerText = "Imagen actual conservada.";
+
+                container.appendChild(div);
+                container.appendChild(textoAyuda);
+                
+                const dataTransfer = new DataTransfer();
+                bundleInput.files = dataTransfer.files; 
+            } else {
+                refreshPhotoQueue();
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('modalProducto'));
+            modal.show();
+        }
+
+        function limpiarFormProducto() {
+            document.getElementById('modalProductoTitle').innerText = "Registrar Ítem en el Menú";
+            document.getElementById('formProducto').reset();
+            document.getElementById('prodId').value = "";
+            imageLotMemory = [];
+            refreshPhotoQueue();
+        }
+    </script>
+</body>
+</html>
