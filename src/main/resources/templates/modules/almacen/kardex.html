@@ -1,0 +1,362 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Kardex Global | Pollería Latina</title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+      .cursor-pointer {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div
+            class="app-page-head d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4"
+          >
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0 fw-medium">
+                <li class="breadcrumb-item">
+                  <a
+                    th:href="@{/dashboard}"
+                    class="text-muted text-decoration-none"
+                    ><i class="fi fi-rr-home"></i> Inicio</a
+                  >
+                </li>
+                <li
+                  class="breadcrumb-item active text-dark"
+                  aria-current="page"
+                >
+                  Auditoría de Kardex
+                </li>
+              </ol>
+            </nav>
+            <a
+              th:href="@{/inventarios}"
+              class="btn btn-dark shadow-sm px-4 text-uppercase tracking-wide font-monospace fs-7"
+            >
+              <i class="fi fi-rr-barcode me-2"></i> Registrar Ajuste Masivo
+            </a>
+          </div>
+
+          <div class="card border border-0 shadow-sm rounded-4 overflow-hidden">
+            <div
+              class="card-header p-4 border-bottom d-flex align-items-center justify-content-between bg-transparent"
+            >
+              <div>
+                <h5
+                  class="card-title mb-1 fw-bold text-uppercase tracking-wider fs-6"
+                  th:text="${titulo}"
+                >
+                  Registro Histórico de Operaciones
+                </h5>
+                <p class="text-muted fs-7 mb-0">
+                  Auditoría general agrupada por transacciones de inventario
+                  ejecutadas.
+                </p>
+              </div>
+              <div class="bg-dark text-light p-2.5 rounded-3">
+                <i class="fi fi-rr-time-past fs-5"></i>
+              </div>
+            </div>
+
+            <div class="card-body p-0">
+              <div id="datosKardex" style="display: none">
+                <div
+                  th:each="mov : ${movimientosGlobales}"
+                  class="kardex-data-item"
+                  th:data-fecha="${#temporals.format(mov.fechaRegistro, 'dd/MM/yyyy hh:mm a')}"
+                  th:data-insumo-id="${mov.insumo.id}"
+                  th:data-insumo="${mov.insumo.nombre}"
+                  th:data-unidad="${mov.insumo.unidadMedida.abreviatura}"
+                  th:data-tipo="${mov.tipoMovimiento.name()}"
+                  th:data-cantidad="${mov.cantidad}"
+                  th:data-origen="${mov.origen}"
+                  th:data-observacion="${mov.observacion}"
+                  th:data-autor="${mov.usuario.nombre + ' ' + mov.usuario.apellidos}"
+                ></div>
+              </div>
+
+              <div class="table-responsive px-4 py-3">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light text-uppercase fs-7 tracking-wider">
+                    <tr>
+                      <th class="py-3 text-muted border-0 rounded-start">
+                        Fecha / Hora
+                      </th>
+                      <th class="py-3 text-muted border-0">
+                        Código Transacción
+                      </th>
+                      <th class="py-3 text-muted border-0">
+                        Detalle Operación
+                      </th>
+                      <th class="py-3 text-muted border-0 text-center">
+                        Tipo Core
+                      </th>
+                      <th class="py-3 text-muted border-0 text-center">
+                        Volumen Total
+                      </th>
+                      <th class="py-3 text-muted border-0">Registrado por</th>
+                      <th class="text-end py-3 text-muted border-0 rounded-end">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaOperaciones"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <div
+      class="modal fade"
+      id="modalDetallesOperacion"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div
+            class="p-4 border-bottom position-relative bg-light bg-opacity-25"
+          >
+            <button
+              type="button"
+              class="btn-close position-absolute top-0 end-0 m-3 shadow-none"
+              data-bs-dismiss="modal"
+            ></button>
+            <div class="d-flex align-items-center gap-3">
+              <div
+                class="bg-dark text-white rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center"
+                style="width: 50px; height: 50px"
+              >
+                <i class="fi fi-rr-search-alt fs-5"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold text-uppercase tracking-wider mb-0 fs-6">
+                  Desglose de Transacción
+                </h5>
+                <p class="text-muted font-monospace small mb-0" id="mod-fecha">
+                  Cargando...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-body p-0">
+            <div class="p-4 border-bottom bg-light bg-opacity-10">
+              <div class="row g-3 font-monospace small">
+                <div class="col-md-4">
+                  <small
+                    class="text-muted text-uppercase fw-bold fs-8 d-block mb-1"
+                    >Documento Origen</small
+                  >
+                  <span class="text-dark fw-bold" id="mod-origen">--</span>
+                </div>
+                <div class="col-md-5">
+                  <small
+                    class="text-muted text-uppercase fw-bold fs-8 d-block mb-1"
+                    >Responsable Operativo</small
+                  >
+                  <span class="text-secondary fw-semibold" id="mod-autor"
+                    >--</span
+                  >
+                </div>
+                <div class="col-md-3 text-end" id="mod-tipo">--</div>
+              </div>
+              <div class="mt-3 pt-3 border-top">
+                <small
+                  class="text-muted text-uppercase fw-bold fs-8 d-block mb-1"
+                  >Descripción / Referencias Clínicas</small
+                >
+                <span class="text-muted fs-7" id="mod-obs">--</span>
+              </div>
+            </div>
+
+            <div class="p-4">
+              <h6
+                class="fw-bold text-uppercase tracking-wide text-dark mb-3 font-monospace small"
+              >
+                Materias Primas Procesadas en este Lote:
+              </h6>
+              <div class="table-responsive border rounded-3 overflow-hidden">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light text-uppercase fs-8 tracking-wider">
+                    <tr>
+                      <th class="py-2 border-0 px-3">Insumo Core</th>
+                      <th class="py-2 border-0 text-center" width="180">
+                        Historial Insumo
+                      </th>
+                      <th class="py-2 border-0 text-center" width="180">
+                        Variación
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaDetallesInsumos"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light bg-opacity-20 p-3 border-top">
+            <button
+              type="button"
+              class="btn btn-dark px-4 fw-semibold text-uppercase font-sm tracking-wide"
+              data-bs-dismiss="modal"
+            >
+              Cerrar Auditoría
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const dataItems = document.querySelectorAll(".kardex-data-item");
+        const operacionesMap = new Map();
+
+        // 1. Agrupar filas individuales usando el campo 'origen' (Lote transaccional unificado)
+        dataItems.forEach((item) => {
+          const fecha = item.getAttribute("data-fecha");
+          const insumoId = item.getAttribute("data-insumo-id");
+          const insumo = item.getAttribute("data-insumo");
+          const unidad = item.getAttribute("data-unit");
+          const tipo = item.getAttribute("data-tipo");
+          const cantidad = parseFloat(item.getAttribute("data-cantidad")) || 0;
+          const origen = item.getAttribute("data-origen");
+          const observacion = item.getAttribute("data-observacion");
+          const autor = item.getAttribute("data-autor");
+
+          // La firma clave es el origen del documento de inventario
+          const firma = origen;
+
+          if (!operacionesMap.has(firma)) {
+            operacionesMap.set(firma, {
+              fecha: fecha,
+              origen: origen,
+              tipo: tipo,
+              observacion: observacion,
+              autor: autor,
+              totalVolumen: 0,
+              detalles: [],
+            });
+          }
+
+          const grupo = operacionesMap.get(firma);
+          grupo.totalVolumen += cantidad;
+          grupo.detalles.push({ insumoId, insumo, unidad, cantidad });
+        });
+
+        // 2. Renderizar tabla limpia agrupada
+        const operacionesAgrupadas = Array.from(operacionesMap.values());
+        const tbody = document.getElementById("tablaOperaciones");
+
+        if (operacionesAgrupadas.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted"><i class="fi fi-rr-folder-open display-6 d-block mb-2 opacity-25"></i>No hay registros logísticos en el Kardex.</td></tr>`;
+          return;
+        }
+
+        let htmlRows = "";
+        operacionesAgrupadas.forEach((op, index) => {
+          const badgeTipo =
+            op.tipo === "ENTRADA"
+              ? `<span class="text-success fw-bold font-monospace fs-7"><i class="fi fi-rr-arrow-circle-down me-1"></i>INGRESO</span>`
+              : `<span class="text-dark fw-bold font-monospace fs-7"><i class="fi fi-rr-arrow-circle-up me-1"></i>EGRESO</span>`;
+
+          const colorClass =
+            op.tipo === "ENTRADA" ? "text-success" : "text-dark";
+          const signo = op.tipo === "ENTRADA" ? "+" : "-";
+
+          htmlRows += `
+            <tr class="border-bottom">
+              <td class="py-3 font-monospace text-secondary fs-7">${op.fecha}</td>
+              <td class="py-3 font-monospace fw-bold text-dark">${op.origen}</td>
+              <td class="py-3 text-muted small text-truncate" style="max-width: 220px;">${op.observacion}</td>
+              <td class="py-3 text-center">${badgeTipo}</td>
+              <td class="py-3 text-center font-monospace">
+                <span class="fw-bold fs-6 ${colorClass}">${signo}${op.totalVolumen.toFixed(2)}</span>
+                <small class="text-muted d-block lh-1 text-lowercase" style="font-size: 0.7rem;">(${op.detalles.length} insumos)</small>
+              </td>
+              <td class="py-3 text-secondary small"><i class="fi fi-rr-user opacity-50 me-1"></i>${op.autor}</td>
+              <td class="py-3 text-end">
+                <button class="btn btn-sm btn-outline-dark font-monospace fw-semibold fs-7 tracking-wide py-1.5 px-3 btn-ver-detalle" data-idx="${index}">
+                  <i class="fi fi-rr-eye me-1 align-middle"></i> REVISAR
+                </button>
+              </td>
+            </tr>`;
+        });
+        tbody.innerHTML = htmlRows;
+
+        // 3. Inyección dinámica de filas en el Modal
+        const bootstrapModal = new bootstrap.Modal(
+          document.getElementById("modalDetallesOperacion"),
+        );
+        const modalTbody = document.getElementById("tablaDetallesInsumos");
+
+        document.querySelectorAll(".btn-ver-detalle").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const op = operacionesAgrupadas[this.getAttribute("data-idx")];
+
+            document.getElementById("mod-fecha").innerText = op.fecha;
+            document.getElementById("mod-origen").innerText = op.origen;
+            document.getElementById("mod-autor").innerText = op.autor;
+            document.getElementById("mod-obs").innerText = op.observacion;
+
+            document.getElementById("mod-tipo").innerHTML =
+              op.tipo === "ENTRADA"
+                ? `<span class="badge bg-success-subtle text-success border font-monospace px-2.5 py-1.5 rounded-3 fs-7">ENTRADA</span>`
+                : `<span class="badge bg-secondary-subtle text-dark border font-monospace px-2.5 py-1.5 rounded-3 fs-7">SALIDA</span>`;
+
+            let detailHtml = "";
+            op.detalles.forEach((d) => {
+              const signoDetalle = op.tipo === "ENTRADA" ? "+" : "-";
+              const colorDetalle =
+                op.tipo === "ENTRADA" ? "text-success" : "text-dark";
+
+              detailHtml += `
+                <tr>
+                  <td class="py-3 px-3">
+                    <div class="fw-bold text-dark font-monospace">${d.insumo}</div>
+                  </td>
+                  <td class="py-3 text-center">
+                    <a href="/kardex/insumo/${d.insumoId}" class="btn btn-xs btn-light border px-2 py-1 fs-8 text-uppercase tracking-wider font-monospace text-decoration-none text-dark fw-bold">
+                      <i class="fi fi-rr-time-past me-1"></i> Ver Cronología
+                    </a>
+                  </td>
+                  <td class="py-3 text-center font-monospace fw-bold fs-6 ${colorDetalle}">
+                    ${signoDetalle}${parseFloat(d.cantidad).toFixed(2)} ${d.unidad}
+                  </td>
+                </tr>`;
+            });
+            modalTbody.innerHTML = detailHtml;
+            bootstrapModal.show();
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

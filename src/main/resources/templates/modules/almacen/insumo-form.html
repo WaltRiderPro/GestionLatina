@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo} + ' | Pollería Latina'">
+      Formulario de Insumo
+    </title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .max-w-700px {
+        max-width: 700px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 max-w-700px mx-auto mb-4"
+            role="alert"
+          >
+            <div class="d-flex align-items-center">
+              <i class="fi fi-rr-triangle-warning me-2"></i>
+              <span class="fw-medium" th:text="${error}"></span>
+            </div>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div
+            class="card border-0 shadow-sm rounded-4 overflow-hidden max-w-700px mx-auto"
+          >
+            <div
+              class="card-header p-4 border-bottom d-flex align-items-center bg-transparent"
+            >
+              <div
+                class="bg-dark text-light p-2.5 rounded-3 me-3 d-flex align-items-center justify-content-center"
+              >
+                <i class="fi fi-rr-document-signed fs-5"></i>
+              </div>
+              <div>
+                <h5
+                  class="card-title mb-1 fw-bold text-uppercase tracking-wider fs-6"
+                  th:text="${titulo}"
+                >
+                  Ficha de Insumo
+                </h5>
+                <p class="text-muted fs-7 mb-0">
+                  Configure las propiedades básicas de control operacional para
+                  la materia prima.
+                </p>
+              </div>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+              <form
+                th:action="@{/insumos/guardar}"
+                th:object="${insumo}"
+                method="post"
+                autocomplete="off"
+                novalidate
+              >
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{activo}" />
+                <input type="hidden" th:field="*{eliminado}" />
+
+                <div class="row g-4 mb-4">
+                  <div class="col-md-8">
+                    <label
+                      for="insumoNombre"
+                      class="form-label text-uppercase fw-bold text-secondary fs-7 tracking-wide mb-2"
+                      >Nombre / Identificador Core
+                      <span class="text-danger">*</span></label
+                    >
+                    <input
+                      type="text"
+                      id="insumoNombre"
+                      class="form-control form-control-lg shadow-none border"
+                      th:field="*{nombre}"
+                      placeholder="Ej: Papa Canchan, Pechuga de Pollo"
+                      required
+                    />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label
+                      for="insumoUnidad"
+                      class="form-label text-uppercase fw-bold text-secondary fs-7 tracking-wide mb-2"
+                      >U. Medida <span class="text-danger">*</span></label
+                    >
+                    <select
+                      id="insumoUnidad"
+                      class="form-select form-select-lg shadow-none border cursor-pointer"
+                      th:field="*{unidadMedida.id}"
+                      required
+                    >
+                      <option value="" disabled selected>-- Elija --</option>
+                      <option
+                        th:each="um : ${unidades}"
+                        th:value="${um.id}"
+                        th:text="${um.nombre} + ' (' + ${um.abreviatura} + ')'"
+                      ></option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row g-4 mb-4 pt-4 border-top">
+                  <div class="col-md-6" th:if="${insumo.id != null}">
+                    <label
+                      class="form-label text-uppercase fw-bold text-secondary fs-7 tracking-wide mb-2"
+                      >Existencias Físicas Actuales</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control form-control-lg font-monospace shadow-none border bg-light bg-opacity-75 fw-bold text-dark"
+                      th:value="${insumo.stockActual} + ' ' + ${insumo.unidadMedida.abreviatura}"
+                      readonly
+                    />
+                    <div
+                      class="form-text small text-muted"
+                      style="font-size: 0.72rem"
+                    >
+                      Las variaciones de volumen se registran mediante Ajustes
+                      Masivos.
+                    </div>
+                  </div>
+
+                  <input
+                    type="hidden"
+                    th:if="${insumo.id == null}"
+                    th:field="*{stockActual}"
+                    value="0.0"
+                  />
+
+                  <div
+                    th:class="${insumo.id != null} ? 'col-md-6' : 'col-md-12'"
+                  >
+                    <label
+                      for="insumoMinimo"
+                      class="form-label text-uppercase fw-bold text-secondary fs-7 tracking-wide mb-2"
+                      >Stock Mínimo de Seguridad
+                      <span class="text-danger">*</span></label
+                    >
+                    <div class="input-group input-group-lg">
+                      <input
+                        type="number"
+                        id="insumoMinimo"
+                        step="0.01"
+                        class="form-control font-monospace shadow-none border text-danger fw-bold"
+                        th:field="*{stockMinimo}"
+                        required
+                      />
+                    </div>
+                    <div
+                      class="form-text small text-muted"
+                      style="font-size: 0.72rem"
+                    >
+                      El sistema encenderá un testigo crítico cuando el
+                      inventario caiga a este nivel.
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="mt-5 pt-3 border-top d-flex justify-content-end gap-2"
+                >
+                  <a
+                    th:href="@{/insumos}"
+                    class="btn btn-light border px-4 fw-medium text-uppercase font-monospace fs-7"
+                    >Cancelar</a
+                  >
+                  <button
+                    type="submit"
+                    class="btn btn-dark px-4 fw-semibold d-flex align-items-center gap-2 text-uppercase font-monospace fs-7 tracking-wide"
+                  >
+                    <i class="fi fi-rr-disk"></i>
+                    <span>Confirmar Ficha</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+  </body>
+</html>

@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo}">Productos | Pollería Latina</title>
+    <!-- Google Fonts (opcional, no afecta el modo oscuro) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===== ESTILOS RESPETUOSOS DEL TEMA (CLARO/OSCURO) ===== */
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      /* Título con gradiente que se adapta al modo oscuro (usa colores primarios) */
+      .th-title {
+        background: linear-gradient(
+          135deg,
+          var(--bs-primary),
+          var(--bs-warning)
+        );
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.3px;
+      }
+
+      /* Tarjeta principal: usa fondo de tarjeta del tema */
+      .card-modern {
+        background-color: var(--bs-card-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 28px;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.3s ease;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      }
+
+      .card-modern:hover {
+        box-shadow: 0 20px 35px -10px rgba(var(--bs-primary-rgb), 0.15);
+      }
+
+      .card-header-modern {
+        background: transparent;
+        border-bottom: 2px solid var(--bs-border-color);
+        padding: 1.2rem 1.5rem;
+      }
+
+      /* Botón principal gourmet (usa variables de color) */
+      .btn-primary-gourmet {
+        background: linear-gradient(
+          105deg,
+          var(--bs-primary),
+          var(--bs-orange, #e07c2c)
+        );
+        border: none;
+        border-radius: 40px;
+        padding: 0.55rem 1.6rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        box-shadow: 0 4px 10px rgba(var(--bs-primary-rgb), 0.2);
+        transition: all 0.2s;
+        color: white;
+      }
+
+      .btn-primary-gourmet:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 18px rgba(var(--bs-primary-rgb), 0.3);
+      }
+
+      .btn-outline-gourmet {
+        border-radius: 40px;
+        border: 1.5px solid var(--bs-primary);
+        color: var(--bs-primary);
+        background: transparent;
+        font-weight: 600;
+        transition: 0.2s;
+      }
+
+      .btn-outline-gourmet:hover {
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        color: var(--bs-primary);
+      }
+
+      /* Tabla elegante y adaptable */
+      .table-gourmet {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+      }
+
+      .table-gourmet thead th {
+        background: var(--bs-gray-100);
+        background-color: rgba(var(--bs-dark-rgb), 0.03);
+        border: none;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--bs-secondary-color);
+        padding: 1rem 0.75rem;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+      }
+
+      .table-gourmet tbody tr {
+        background-color: var(--bs-card-bg);
+        border-radius: 20px;
+        transition: all 0.2s;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--bs-border-color);
+      }
+
+      .table-gourmet tbody tr:hover {
+        transform: scale(1.003);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+        border-color: var(--bs-primary-border-subtle);
+      }
+
+      .table-gourmet td {
+        border: none;
+        padding: 0.9rem 0.75rem;
+        vertical-align: middle;
+        background: inherit;
+      }
+
+      /* Badges dinámicos */
+      .badge-category {
+        background: rgba(var(--bs-primary-rgb), 0.15);
+        color: var(--bs-primary);
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 40px;
+        font-size: 0.75rem;
+      }
+
+      .badge-presentation {
+        background: rgba(var(--bs-secondary-rgb), 0.15);
+        color: var(--bs-secondary);
+        font-weight: 500;
+        padding: 5px 12px;
+        border-radius: 30px;
+      }
+
+      .badge-status-active {
+        background: var(--bs-success);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.7rem;
+      }
+
+      .badge-status-inactive {
+        background: var(--bs-danger);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 40px;
+        font-weight: 600;
+      }
+
+      /* Botones de acción en tabla */
+      .btn-action {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        transition: all 0.2s;
+        margin: 0 3px;
+      }
+
+      .btn-action-primary {
+        background: rgba(var(--bs-primary-rgb), 0.15);
+        color: var(--bs-primary);
+      }
+
+      .btn-action-primary:hover {
+        background: var(--bs-primary);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .btn-action-danger {
+        background: rgba(var(--bs-danger-rgb), 0.15);
+        color: var(--bs-danger);
+      }
+
+      .btn-action-danger:hover {
+        background: var(--bs-danger);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      /* Modal adaptado al tema */
+      .modal-content-gourmet {
+        background-color: var(--bs-modal-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 32px;
+        overflow: hidden;
+      }
+
+      .modal-header-gourmet {
+        background: var(--bs-modal-header-bg);
+        border-bottom: 1px solid var(--bs-border-color);
+        padding: 1.2rem 1.8rem;
+      }
+
+      .modal-title-gourmet {
+        font-weight: 800;
+        background: linear-gradient(
+          135deg,
+          var(--bs-primary),
+          var(--bs-warning)
+        );
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Formularios */
+      .form-control-gourmet,
+      .form-select-gourmet {
+        background-color: var(--bs-body-bg);
+        border: 1.5px solid var(--bs-border-color);
+        border-radius: 20px;
+        padding: 0.65rem 1rem;
+        transition: 0.2s;
+        color: var(--bs-body-color);
+      }
+
+      .form-control-gourmet:focus,
+      .form-select-gourmet:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), 0.15);
+      }
+
+      /* Galería de fotos */
+      .photo-gallery-grid {
+        background-color: rgba(var(--bs-dark-rgb), 0.02);
+        border-radius: 24px;
+        border: 1.5px dashed var(--bs-border-color);
+        transition: all 0.2s;
+        min-height: 100px;
+        padding: 12px;
+      }
+
+      .remove-img-btn {
+        background: var(--bs-danger);
+        border: none;
+        color: white;
+        width: 22px;
+        height: 22px;
+        border-radius: 40px;
+        font-size: 14px;
+        line-height: 1;
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .remove-img-btn:hover {
+        filter: brightness(0.9);
+      }
+
+      .current-img-label {
+        background: rgba(var(--bs-primary-rgb), 0.15);
+        border-radius: 40px;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--bs-primary);
+      }
+
+      .btn-add-photo {
+        border-radius: 50px;
+        background: transparent;
+        border: 1.5px solid var(--bs-border-color);
+        font-weight: 600;
+        transition: 0.2s;
+        color: var(--bs-body-color);
+      }
+
+      .btn-add-photo:hover {
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border-color: var(--bs-primary);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .table-gourmet thead {
+          display: none;
+        }
+        .table-gourmet tbody tr {
+          display: block;
+          margin-bottom: 1rem;
+          border-radius: 24px;
+          padding: 0.75rem;
+        }
+        .table-gourmet td {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          text-align: right;
+          padding: 0.6rem 0.2rem;
+          border-bottom: 1px solid var(--bs-border-color);
+        }
+        .table-gourmet td::before {
+          content: attr(data-label);
+          font-weight: 700;
+          color: var(--bs-primary);
+          text-align: left;
+          flex: 1;
+        }
+        .table-gourmet td:last-child {
+          border-bottom: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid px-4 px-xl-5 py-3">
+          <!-- Alertas (sin cambios funcionales, solo se adaptan al tema) -->
+          <div
+            th:if="${success}"
+            class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0"
+            role="alert"
+          >
+            <span th:text="${success}"></span>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0"
+            role="alert"
+          >
+            <span th:text="${error}"></span>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <!-- Encabezado -->
+          <div
+            class="d-flex flex-wrap justify-content-between align-items-center mb-5 mt-2"
+          >
+            <div class="position-relative">
+              <h1 class="display-6 fw-bold th-title mb-1" th:text="${titulo}">
+                Catálogo de Productos
+              </h1>
+              <p class="text-muted mb-0 fs-6">
+                <i class="fa fa-utensils me-1"></i> Gestión de platillos, combos
+                y bebidas
+              </p>
+              <div
+                class="mt-2"
+                style="
+                  width: 70px;
+                  height: 4px;
+                  background: linear-gradient(
+                    90deg,
+                    var(--bs-primary),
+                    var(--bs-warning)
+                  );
+                  border-radius: 4px;
+                "
+              ></div>
+            </div>
+            <div>
+              <button
+                type="button"
+                class="btn btn-primary-gourmet shadow-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#modalProducto"
+                onclick="limpiarFormProducto()"
+              >
+                <i class="fa fa-plus-circle me-2"></i> Nuevo Producto
+              </button>
+            </div>
+          </div>
+
+          <!-- Tarjeta principal con tabla -->
+          <div class="card card-modern mb-5">
+            <div class="card-header-modern d-flex align-items-center">
+              <h5 class="mb-0 fw-bold">
+                <i class="fa fa-fire me-2"></i> Platillos y Productos
+                Disponibles
+              </h5>
+            </div>
+            <div class="card-body p-0 p-xl-3">
+              <div class="table-responsive p-3">
+                <table class="table table-gourmet w-100">
+                  <thead>
+                    <tr>
+                      <th>Imagen</th>
+                      <th>Nombre</th>
+                      <th>Categoría</th>
+                      <th>Presentación</th>
+                      <th>Precio</th>
+                      <th>Estado</th>
+                      <th class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:if="${#lists.isEmpty(productos)}">
+                      <td colspan="7" class="text-center text-muted py-5">
+                        <i class="fa fa-box-open fa-2x mb-2 d-block"></i> No hay
+                        productos registrados en el sistema.
+                      </td>
+                    </tr>
+                    <tr th:each="prod : ${productos}">
+                      <td data-label="Imagen">
+                        <img
+                          th:src="${prod.getListaImagenes() != null && !prod.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${prod.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}"
+                          alt="Producto"
+                          class="rounded-3 shadow-sm"
+                          width="60"
+                          height="60"
+                          style="
+                            object-fit: cover;
+                            border: 2px solid var(--bs-border-color);
+                          "
+                        />
+                      </td>
+                      <td
+                        data-label="Nombre"
+                        class="fw-bold"
+                        th:text="${prod.nombre != null} ? ${prod.nombre} : 'Producto sin nombre'"
+                      ></td>
+                      <td data-label="Categoría">
+                        <span
+                          class="badge-category"
+                          th:text="${prod.categoria != null} ? ${prod.categoria.nombre} : 'Sin Categoría'"
+                        ></span>
+                      </td>
+                      <td data-label="Presentación">
+                        <span
+                          class="badge-presentation"
+                          th:text="${prod.presentacion != null} ? ${prod.presentacion.nombre} : 'Sin Formato'"
+                        ></span>
+                      </td>
+                      <td data-label="Precio" class="fw-bold">
+                        <span
+                          th:text="${prod.precio != null} ? 'S/ ' + ${#numbers.formatDecimal(prod.precio, 1, 2)} : 'S/ 0.00'"
+                        ></span>
+                      </td>
+                      <td data-label="Estado">
+                        <span th:if="${prod.activo}" class="badge-status-active"
+                          ><i class="fa fa-check-circle me-1"></i>
+                          Disponible</span
+                        >
+                        <span
+                          th:unless="${prod.activo}"
+                          class="badge-status-inactive"
+                          ><i class="fa fa-ban me-1"></i> Agotado</span
+                        >
+                      </td>
+                      <td data-label="Acciones" class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                          <button
+                            type="button"
+                            class="btn btn-action btn-action-primary"
+                            th:data-id="${prod.id}"
+                            th:data-nombre="${prod.nombre}"
+                            th:data-categoria="${prod.categoria != null ? prod.categoria.id : ''}"
+                            th:data-presentacion="${prod.presentacion != null ? prod.presentacion.id : ''}"
+                            th:data-precio="${prod.precio}"
+                            th:data-descripcion="${prod.descripcion}"
+                            th:data-imagen="${prod.getListaImagenes() != null && !prod.getListaImagenes().isEmpty() ? prod.getListaImagenes().get(0) : ''}"
+                            onclick="cargarEditarProducto(this)"
+                          >
+                            <i class="fa fa-pencil-alt fa-sm"></i>
+                          </button>
+                          <a
+                            th:href="@{/productos/eliminar/{id}(id=${prod.id})}"
+                            class="btn btn-action btn-action-danger"
+                            onclick="
+                              return confirm(
+                                '¿Deseas dar de baja este producto del menú?',
+                              );
+                            "
+                          >
+                            <i class="fa fa-trash fa-sm"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL (con estilos adaptados al tema) -->
+        <div
+          class="modal fade"
+          id="modalProducto"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content modal-content-gourmet">
+              <div class="modal-header modal-header-gourmet border-0">
+                <h5
+                  class="modal-title modal-title-gourmet fw-bold"
+                  id="modalProductoTitle"
+                >
+                  Registrar Ítem en el Menú
+                </h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <form
+                th:action="@{/productos/guardar}"
+                th:object="${producto}"
+                method="POST"
+                enctype="multipart/form-data"
+                id="formProducto"
+              >
+                <input type="hidden" th:field="*{id}" id="prodId" />
+                <div class="modal-body p-4 p-xl-5">
+                  <div class="row g-4">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Nombre del Producto
+                        <span class="text-danger">*</span></label
+                      >
+                      <input
+                        type="text"
+                        th:field="*{nombre}"
+                        id="prodNombre"
+                        class="form-control form-control-gourmet"
+                        required
+                        placeholder="Ej: 1/4 de Pollo a la Brasa"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Categoría <span class="text-danger">*</span></label
+                      >
+                      <select
+                        th:field="*{categoria.id}"
+                        id="prodCategoria"
+                        class="form-select form-select-gourmet"
+                        required
+                      >
+                        <option value="" disabled selected>
+                          -- Seleccione una clasificación --
+                        </option>
+                        <option
+                          th:each="cat : ${categorias}"
+                          th:value="${cat.id}"
+                          th:text="${cat.nombre}"
+                        ></option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Presentación <span class="text-danger">*</span></label
+                      >
+                      <select
+                        th:field="*{presentacion.id}"
+                        id="prodPresentacion"
+                        class="form-select form-select-gourmet"
+                        required
+                      >
+                        <option value="" disabled selected>
+                          -- Seleccione el formato --
+                        </option>
+                        <option
+                          th:each="pres : ${presentaciones}"
+                          th:value="${pres.id}"
+                          th:text="${pres.nombre}"
+                        ></option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Precio (S/) <span class="text-danger">*</span></label
+                      >
+                      <input
+                        type="number"
+                        step="0.10"
+                        min="0"
+                        th:field="*{precio}"
+                        id="prodPrecio"
+                        class="form-control form-control-gourmet"
+                        required
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label fw-semibold"
+                        >Descripción corta</label
+                      >
+                      <textarea
+                        th:field="*{descripcion}"
+                        id="prodDescripcion"
+                        class="form-control form-control-gourmet"
+                        rows="2"
+                        placeholder="Ingredientes o detalles del plato..."
+                      ></textarea>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label fw-semibold mb-2"
+                        ><i class="fa fa-camera me-1"></i> Fotografías del
+                        Platillo</label
+                      >
+                      <div
+                        class="photo-gallery-grid d-flex flex-wrap align-items-center gap-3"
+                        id="previewContainer"
+                        style="min-height: 100px"
+                      >
+                        <p
+                          id="galleryPlaceholder"
+                          class="text-muted w-100 text-center my-auto small fw-semibold m-0"
+                        >
+                          <i class="fa fa-cloud-upload-alt me-1"></i> Ninguna
+                          foto seleccionada aún.
+                        </p>
+                      </div>
+                      <div class="d-flex gap-2 mt-3">
+                        <button
+                          type="button"
+                          class="btn btn-add-photo flex-grow-1 py-2"
+                          onclick="
+                            document.getElementById('imgTriggerInput').click()
+                          "
+                        >
+                          <i class="fa fa-plus-circle me-1"></i> Añadir foto
+                        </button>
+                        <input
+                          type="file"
+                          id="imgTriggerInput"
+                          class="d-none"
+                          accept="image/png, image/jpeg, image/webp"
+                        />
+                        <input
+                          type="file"
+                          name="files"
+                          id="finalBundleInput"
+                          class="d-none"
+                          multiple
+                        />
+                      </div>
+                      <small class="text-muted mt-2 d-block"
+                        ><i class="fa fa-info-circle"></i> Sube varias imágenes
+                        una a una.</small
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer border-0 bg-transparent pb-4 px-5">
+                  <button
+                    type="button"
+                    class="btn btn-outline-gourmet px-4"
+                    data-bs-dismiss="modal"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-primary-gourmet px-5 shadow-sm"
+                  >
+                    Guardar Producto
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <!-- JavaScript idéntico al original (sin cambios funcionales) -->
+    <script>
+      let imageLotMemory = [];
+      const triggerInput = document.getElementById("imgTriggerInput");
+      const bundleInput = document.getElementById("finalBundleInput");
+      const container = document.getElementById("previewContainer");
+      const placeholder = document.getElementById("galleryPlaceholder");
+
+      triggerInput.addEventListener("change", function (e) {
+        if (e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        imageLotMemory.push(file);
+        refreshPhotoQueue();
+        triggerInput.value = "";
+      });
+
+      function refreshPhotoQueue() {
+        const dataTransfer = new DataTransfer();
+        container.innerHTML = "";
+
+        if (imageLotMemory.length === 0) {
+          container.appendChild(placeholder);
+          bundleInput.files = dataTransfer.files;
+          return;
+        }
+
+        imageLotMemory.forEach((file, index) => {
+          dataTransfer.items.add(file);
+          const div = document.createElement("div");
+          div.className = "position-relative d-inline-block";
+          div.style = "width: 80px; height: 80px;";
+          const img = document.createElement("img");
+          img.style =
+            "width:100%; height:100%; object-fit:cover; border-radius:16px; border:2px solid var(--bs-border-color);";
+          const reader = new FileReader();
+          reader.onload = function (evt) {
+            img.src = evt.target.result;
+          };
+          reader.readAsDataURL(file);
+          const closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className = "remove-img-btn";
+          closeBtn.innerHTML = "×";
+          closeBtn.onclick = function () {
+            imageLotMemory.splice(index, 1);
+            refreshPhotoQueue();
+          };
+          div.appendChild(img);
+          div.appendChild(closeBtn);
+          container.appendChild(div);
+        });
+        bundleInput.files = dataTransfer.files;
+      }
+
+      function cargarEditarProducto(btn) {
+        document.getElementById("modalProductoTitle").innerText =
+          "Actualizar Ítem del Menú";
+        document.getElementById("prodId").value = btn.getAttribute("data-id");
+        document.getElementById("prodNombre").value =
+          btn.getAttribute("data-nombre");
+        document.getElementById("prodCategoria").value =
+          btn.getAttribute("data-categoria");
+        document.getElementById("prodPresentacion").value =
+          btn.getAttribute("data-presentacion");
+        document.getElementById("prodPrecio").value =
+          btn.getAttribute("data-precio");
+        document.getElementById("prodDescripcion").value =
+          btn.getAttribute("data-descripcion");
+
+        imageLotMemory = [];
+        const imagenGuardada = btn.getAttribute("data-imagen");
+
+        if (imagenGuardada && imagenGuardada.trim() !== "") {
+          container.innerHTML = "";
+          const wrapper = document.createElement("div");
+          wrapper.className = "d-flex align-items-center gap-3 flex-wrap";
+          const imgDiv = document.createElement("div");
+          imgDiv.className = "position-relative";
+          imgDiv.style = "width: 80px; height: 80px;";
+          const img = document.createElement("img");
+          img.src = "/uploads/productos/" + imagenGuardada;
+          img.style =
+            "width:100%; height:100%; object-fit:cover; border-radius:16px; border:2px solid var(--bs-primary);";
+          imgDiv.appendChild(img);
+          const labelSpan = document.createElement("span");
+          labelSpan.className = "current-img-label";
+          labelSpan.innerHTML =
+            "<i class='fa fa-check-circle'></i> Imagen actual conservada";
+          wrapper.appendChild(imgDiv);
+          wrapper.appendChild(labelSpan);
+          container.appendChild(wrapper);
+          const dataTransfer = new DataTransfer();
+          bundleInput.files = dataTransfer.files;
+        } else {
+          refreshPhotoQueue();
+        }
+
+        const modal = new bootstrap.Modal(
+          document.getElementById("modalProducto"),
+        );
+        modal.show();
+      }
+
+      function limpiarFormProducto() {
+        document.getElementById("modalProductoTitle").innerText =
+          "Registrar Ítem en el Menú";
+        document.getElementById("formProducto").reset();
+        document.getElementById("prodId").value = "";
+        imageLotMemory = [];
+        refreshPhotoQueue();
+      }
+    </script>
+  </body>
+</html>
