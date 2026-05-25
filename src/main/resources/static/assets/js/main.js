@@ -48,6 +48,94 @@ const initAppToggler = () => {
     }
 };
 
+const initPersistentMenubarTabs = () => {
+    const menubar = document.getElementById("appMenubar");
+    const tabLinks = Array.from(
+        document.querySelectorAll('#appMenubarTabs a[data-bs-toggle="tab"]'),
+    );
+    const menuLinks = Array.from(
+        document.querySelectorAll(".side-menubar .menu-item .menu-link[href]"),
+    );
+
+    if (!menubar || tabLinks.length === 0) {
+        return;
+    }
+
+    const storageKey = "gestion-latina:active-menubar-tab";
+    const normalizePath = (value) => {
+        if (!value) return "/";
+
+        try {
+            const url = new URL(value, window.location.origin);
+            const path = url.pathname.replace(/\/+$/, "");
+            return path || "/";
+        } catch (error) {
+            return value.replace(window.location.origin, "").replace(/\/+$/, "") || "/";
+        }
+    };
+
+    const activateTabLink = (tabLink) => {
+        if (!tabLink) return;
+
+        const targetSelector = tabLink.getAttribute("href");
+        if (!targetSelector) return;
+
+        const targetPane = document.querySelector(targetSelector);
+        if (!targetPane) return;
+
+        tabLinks.forEach((link) => {
+            const paneSelector = link.getAttribute("href");
+            const pane = paneSelector ? document.querySelector(paneSelector) : null;
+
+            link.classList.remove("active");
+            link.setAttribute("aria-selected", "false");
+
+            if (pane) {
+                pane.classList.remove("show", "active");
+            }
+        });
+
+        tabLink.classList.add("active");
+        tabLink.setAttribute("aria-selected", "true");
+        targetPane.classList.add("show", "active");
+
+        window.localStorage.setItem(storageKey, targetSelector);
+    };
+
+    const currentPath = normalizePath(window.location.pathname);
+    const currentMenuLink = menuLinks.find(
+        (link) => normalizePath(link.getAttribute("href")) === currentPath,
+    );
+
+    menuLinks.forEach((link) => {
+        link.classList.toggle("active", link === currentMenuLink);
+    });
+
+    let tabToActivate = null;
+
+    if (currentMenuLink) {
+        const parentPane = currentMenuLink.closest(".tab-pane");
+        if (parentPane?.id) {
+            tabToActivate = tabLinks.find(
+                (link) => link.getAttribute("href") === `#${parentPane.id}`,
+            );
+        }
+    }
+
+    if (!tabToActivate) {
+        const storedTab = window.localStorage.getItem(storageKey);
+        tabToActivate = tabLinks.find(
+            (link) => link.getAttribute("href") === storedTab,
+        );
+    }
+
+    activateTabLink(tabToActivate || tabLinks[0]);
+
+    tabLinks.forEach((tabLink) => {
+        tabLink.addEventListener("click", () => activateTabLink(tabLink));
+    });
+};
+
 const passwordToggle = () => {
     document.querySelectorAll(".toggle-password").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -522,6 +610,7 @@ function initPriceSwitch() {
 document.addEventListener("DOMContentLoaded", () => {
     Waves.init();
     initAppToggler();
+    initPersistentMenubarTabs();
     passwordToggle();
     saerchList();
     setElementHeight();
