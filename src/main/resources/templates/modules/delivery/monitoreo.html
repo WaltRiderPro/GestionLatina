@@ -1,0 +1,391 @@
+<!doctype html>
+<html
+  lang="es"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Monitoreo de Rutas | Pollería Latina</title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.06em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+      .badge-transit {
+        padding: 0.45rem 0.8rem;
+        font-weight: 700;
+        font-family: var(--bs-font-monospace);
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+      }
+      .pulse-indicator {
+        width: 8px;
+        height: 8px;
+        background-color: #ffc107;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse-warn 2s infinite;
+      }
+      @keyframes pulse-warn {
+        0% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+        }
+        70% {
+          transform: scale(1);
+          box-shadow: 0 0 0 6px rgba(255, 193, 7, 0);
+        }
+        100% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper">
+        <div class="container-fluid pt-4">
+          <!-- Encabezado Pro Monocromático -->
+          <div
+            class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4"
+          >
+            <div>
+              <h4
+                class="fw-bold text-uppercase tracking-wider mb-1"
+                th:text="${titulo}"
+              >
+                Monitoreo de Envíos en Tiempo Real
+              </h4>
+              <p class="text-muted small mb-0">
+                Panel de supervisión del administrador. Estado actual de los
+                despachos en tránsito, control de motorizados y métricas de
+                rendimiento en calle.
+              </p>
+            </div>
+            <a
+              th:href="@{/delivery/pedidos}"
+              class="btn btn-light border fw-semibold shadow-sm text-uppercase font-monospace fs-7"
+            >
+              <i class="fi fi-rr-arrow-left me-1 align-middle"></i> Panel de
+              Recepción
+            </a>
+          </div>
+
+          <!-- CONTENEDOR DE ANALÍTICAS EN TRÁNSITO -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div
+                class="card border shadow-sm p-4 rounded-4 bg-transparent position-relative overflow-hidden"
+              >
+                <span
+                  class="text-uppercase text-muted fs-8 fw-bold tracking-wide d-block mb-1"
+                  >Motos en la Calle</span
+                >
+                <div class="d-flex align-items-center gap-2">
+                  <h2
+                    class="fw-bold mb-0 text-dark font-monospace"
+                    id="kpi-motos"
+                  >
+                    0
+                  </h2>
+                  <span class="pulse-indicator mt-2"></span>
+                </div>
+                <small class="text-muted d-block mt-2 font-monospace fs-8"
+                  >Repartidores con ruta asignada activa.</small
+                >
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border shadow-sm p-4 rounded-4 bg-transparent">
+                <span
+                  class="text-uppercase text-muted fs-8 fw-bold tracking-wide d-block mb-1"
+                  >Capital en Tránsito</span
+                >
+                <h2
+                  class="fw-bold mb-0 text-dark font-monospace"
+                  id="kpi-capital"
+                >
+                  S/ 0.00
+                </h2>
+                <small class="text-muted d-block mt-2 font-monospace fs-8"
+                  >Suma total de cuentas flotantes en calle.</small
+                >
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card border shadow-sm p-4 rounded-4 bg-transparent">
+                <span
+                  class="text-uppercase text-muted fs-8 fw-bold tracking-wide d-block mb-1"
+                  >Inversión Logística</span
+                >
+                <h2
+                  class="fw-bold mb-0 text-dark font-monospace"
+                  id="kpi-envios"
+                >
+                  S/ 0.00
+                </h2>
+                <small class="text-muted d-block mt-2 font-monospace fs-8"
+                  >Acumulado bruto de tarifas de delivery asignadas.</small
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- MATRIZ DE SEGUIMIENTO LOGÍSTICO -->
+          <div class="card border shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-transparent border-bottom py-3 px-4">
+              <span
+                class="fs-7 text-uppercase fw-bold text-dark tracking-wide font-monospace d-flex align-items-center gap-2"
+              >
+                <i class="fi fi-rr-paper-plane text-muted"></i> Órdenes en
+                Circulación Actual
+              </span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table
+                  class="table table-hover align-middle mb-0"
+                  id="tablaMonitoreo"
+                >
+                  <thead class="table-light text-uppercase fs-7 tracking-wider">
+                    <tr>
+                      <th class="ps-4 text-muted" style="width: 10%">
+                        Comanda
+                      </th>
+                      <th class="text-muted" style="width: 25%">
+                        Motorizado Asignado
+                      </th>
+                      <th class="text-muted" style="width: 25%">
+                        Destino / Cliente
+                      </th>
+                      <th class="text-muted text-center" style="width: 15%">
+                        Tiempo en Calle
+                      </th>
+                      <th class="text-muted text-end" style="width: 13%">
+                        Monto Total
+                      </th>
+                      <th
+                        class="text-center text-muted pe-4"
+                        style="width: 12%"
+                      >
+                        Indicador
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      th:each="p : ${pedidosEnRuta}"
+                      class="monitoreo-row"
+                      th:data-total="${p.total}"
+                      th:data-envio="${p.costoEnvio ?: 0.0}"
+                      th:data-fecha="${p.fechaRegistro}"
+                    >
+                      <!-- ID de Comanda -->
+                      <td class="ps-4">
+                        <div
+                          class="fw-bold text-dark font-monospace"
+                          th:text="'#DEL-' + ${p.id}"
+                        >
+                          #DEL-1
+                        </div>
+                        <small
+                          class="text-muted font-monospace d-block fs-8"
+                          th:text="${#temporals.format(p.fechaRegistro, 'hh:mm a')}"
+                          >12:00 PM</small
+                        >
+                      </td>
+
+                      <!-- Motorizado Encargado -->
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div
+                            class="bg-light border text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold fs-8 font-monospace"
+                            style="width: 32px; height: 32px"
+                            th:text="${#strings.substring(p.repartidor.nombre,0,1) + #strings.substring(p.repartidor.apellidos,0,1)}"
+                          >
+                            R
+                          </div>
+                          <div>
+                            <div
+                              class="fw-bold text-dark"
+                              th:text="${p.repartidor.nombre + ' ' + p.repartidor.apellidos}"
+                            >
+                              Nombre Repartidor
+                            </div>
+                            <small
+                              class="text-muted font-monospace fs-8 d-block text-uppercase"
+                              th:text="'ID Rider: #' + ${p.repartidor.id}"
+                              >#1</small
+                            >
+                          </div>
+                        </div>
+                      </td>
+
+                      <!-- Destinatario y Ubicación -->
+                      <td>
+                        <div
+                          class="fw-bold text-dark fs-7 text-truncate"
+                          style="max-width: 240px"
+                          th:text="${p.nombreCliente}"
+                        >
+                          Cliente
+                        </div>
+                        <small
+                          class="text-muted font-monospace fs-8 d-block text-truncate"
+                          style="max-width: 240px"
+                          ><i class="fi fi-rr-marker me-1"></i
+                          ><span th:text="${p.direccionEntrega}"
+                            >Dirección</span
+                          ></small
+                        >
+                      </td>
+
+                      <!-- Temporizador de Permanencia Dinámico -->
+                      <td class="text-center">
+                        <span
+                          class="badge bg-light text-dark border font-monospace px-2.5 py-1.5 fs-7 time-elapsed-tracker"
+                          >00m 00s</span
+                        >
+                      </td>
+
+                      <!-- Cuenta Financiera Unificada -->
+                      <td
+                        class="text-end font-monospace fw-bold text-dark fs-6"
+                      >
+                        <span
+                          th:text="'S/ ' + ${#numbers.formatDecimal(p.total + (p.costoEnvio != null ? p.costoEnvio : 0.0), 1, 'POINT', 2, 'COMMA')}"
+                          >S/ 0.00</span
+                        >
+                        <small
+                          class="text-muted d-block font-monospace lh-1"
+                          style="font-size: 0.68rem"
+                          th:text="'Envío: S/ ' + ${p.costoEnvio ?: '0.00'}"
+                          >Envío: 0.00</small
+                        >
+                      </td>
+
+                      <!-- Insignia Logística de Estado Fijo -->
+                      <td class="text-center pe-4">
+                        <span
+                          class="badge bg-warning-subtle text-warning border border-warning border-opacity-25 badge-transit rounded-3 d-inline-flex align-items-center gap-1"
+                        >
+                          <span
+                            class="pulse-indicator"
+                            style="animation-duration: 1.2s"
+                          ></span>
+                          RUTA
+                        </span>
+                      </td>
+                    </tr>
+
+                    <!-- Estado Vacío por si no hay motos circulando en Chiclayo -->
+                    <tr th:if="${#lists.isEmpty(pedidosEnRuta)}">
+                      <td colspan="6" class="text-center py-5 text-muted">
+                        <i
+                          class="fi fi-rr-map-marker-cross display-6 d-block mb-3 opacity-25"
+                        ></i>
+                        <span class="fw-medium"
+                          >No se registran repartidores circulando en la calle
+                          en este momento.</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <!-- MOTOR DE CÁLCULO DE CAPITAL FLOTANTE Y RELOJES EN VIVO -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        calcularTotalesMonitoreo();
+        inicializarRelojesCalle();
+        // Hacemos que los segundos corran en vivo cada 1s
+        setInterval(inicializarRelojesCalle, 1000);
+      });
+
+      // 1. ACUMULADOR ANALÍTICO FINANCIERO EN CALIENTE
+      function calcularTotalesMonitoreo() {
+        const filas = document.querySelectorAll(".monitoreo-row");
+        let contadorMotos = filas.length;
+        let sumaCapital = 0.0;
+        let sumaEnvios = 0.0;
+
+        filas.forEach((fila) => {
+          const total = parseFloat(fila.getAttribute("data-total")) || 0.0;
+          const envio = parseFloat(fila.getAttribute("data-envio")) || 0.0;
+
+          sumaCapital += total + envio;
+          sumaEnvios += envio;
+        });
+
+        document.getElementById("kpi-motos").innerText = contadorMotos;
+        document.getElementById("kpi-capital").innerText =
+          "S/ " + sumaCapital.toFixed(2);
+        document.getElementById("kpi-envios").innerText =
+          "S/ " + sumaEnvios.toFixed(2);
+      }
+
+      // 2. TEMPORIZADOR CRONOLÓGICO INDIVIDUAL EN VIVO
+      function inicializarRelojesCalle() {
+        const filas = document.querySelectorAll(".monitoreo-row");
+
+        filas.forEach((fila) => {
+          const stringFecha = fila.getAttribute("data-fecha"); // Formato ISO de LocalDateTime
+          if (!stringFecha) return;
+
+          const horaRegistro = new Date(stringFecha);
+          const ahora = new Date();
+
+          // Calculamos la diferencia en milisegundos
+          const diferenciaMs = ahora - horaRegistro;
+
+          if (diferenciaMs < 0) return; // Evitar desfases menores a cero por reloj del server
+
+          const totalSegundos = Math.floor(diferenciaMs / 1000);
+          const minutos = Math.floor(totalSegundos / 60);
+          const segundos = totalSegundos % 60;
+
+          // Formateamos con ceros a la izquierda
+          const strMinutos = minutos.toString().padStart(2, "0");
+          const strSegundos = segundos.toString().padStart(2, "0");
+
+          // Pintamos el tiempo transcurrido en la celda correspondiente
+          const celdaReloj = fila.querySelector(".time-elapsed-tracker");
+          if (celdaReloj) {
+            celdaReloj.innerText = `${strMinutos}m ${strSegundos}s`;
+
+            // Si pasa de los 30 minutos (pedido retrasado en la calle), le cambiamos el color a rojo
+            if (minutos >= 30) {
+              celdaReloj.classList.remove("bg-light", "text-dark");
+              celdaReloj.classList.add(
+                "bg-danger-subtle",
+                "text-danger",
+                "border-danger",
+                "border-opacity-25",
+              );
+            }
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

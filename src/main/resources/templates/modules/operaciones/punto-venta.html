@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Punto de Venta | Pollería Latina</title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+      .cursor-pointer {
+        cursor: pointer;
+      }
+
+      /* Estilos POS Especializados */
+      .pos-catalog {
+        height: calc(100vh - 120px);
+        overflow-y: auto;
+        padding-right: 0.5rem;
+      }
+      .pos-cart {
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+      }
+      .cart-items {
+        flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .product-card {
+        transition: all 0.2s ease-in-out;
+        border: 2px solid transparent;
+      }
+      .product-card:hover {
+        border-color: #212529;
+        transform: translateY(-3px);
+      }
+
+      .btn-cat-active {
+        background-color: #212529 !important;
+        color: #fff !important;
+      }
+      .btn-mod-active {
+        background-color: #198754 !important;
+        color: #fff !important;
+        border-color: #198754 !important;
+      }
+
+      /* Ocultar barra de scroll para que se vea limpio */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout overflow-hidden">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper p-3">
+        <div class="container-fluid p-0">
+          <div class="row g-3">
+            <div class="col-lg-7 col-xl-8 pos-catalog">
+              <div
+                class="border-1 shadow-sm rounded-4 mb-3 position-sticky top-0"
+              >
+                <div class="card-body p-3">
+                  <div
+                    class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3"
+                  >
+                    <h5
+                      class="fw-bold text-uppercase tracking-wider mb-0 text-dark"
+                    >
+                      Catálogo Comercial
+                    </h5>
+                    <div class="input-group" style="width: 300px">
+                      <span class="input-group-text border-end-0"
+                        ><i class="fi fi-rr-search text-muted"></i
+                      ></span>
+                      <input
+                        type="text"
+                        id="posBuscador"
+                        class="form-control border-start-0 shadow-none font-monospace fs-7"
+                        placeholder="Buscar plato o bebida..."
+                        onkeyup="filtrarCatalogo()"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2" id="contenedorCategorias">
+                    <button
+                      class="btn btn-light border px-4 py-2 font-monospace fs-8 text-uppercase fw-bold btn-cat-active"
+                      onclick="filtrarPorCategoria('TODAS', this)"
+                    >
+                      TODAS
+                    </button>
+                    <button
+                      th:each="cat : ${categorias}"
+                      class="btn btn-light border px-4 py-2 font-monospace fs-8 text-uppercase fw-bold"
+                      th:text="${cat.nombre}"
+                      th:data-cat="${cat.nombre}"
+                      onclick="
+                        filtrarPorCategoria(this.getAttribute('data-cat'), this)
+                      "
+                    ></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-3" id="grillaProductos">
+                <div
+                  class="col-6 col-md-4 col-xl-3 producto-item"
+                  th:each="p : ${productos}"
+                  th:data-categoria="${p.categoria.nombre}"
+                >
+                  <div
+                    class="card product-card h-100 shadow-sm rounded-4 cursor-pointer"
+                    th:data-id="${p.id}"
+                    th:data-nombre="${p.nombre}"
+                    th:data-precio="${p.precio}"
+                    onclick="agregarItemDesdeTarjeta(this)"
+                  >
+                    <div
+                      class="d-flex justify-content-center align-items-center p-4 border-bottom rounded-top-4"
+                      style="height: 120px"
+                    >
+                      <i
+                        class="fi fi-rr-room-service display-4 text-secondary opacity-50"
+                      ></i>
+                    </div>
+
+                    <div
+                      class="card-body p-3 text-center d-flex flex-column justify-content-between"
+                    >
+                      <div>
+                        <span
+                          class="badge bg-opacity-10 text-dark border px-2 py-1 fs-8 font-monospace mb-2"
+                          th:text="${p.categoria.nombre}"
+                          >Categoría</span
+                        >
+                        <h6
+                          class="fw-bold text-dark fs-7 mb-1 lh-sm"
+                          th:text="${p.nombre}"
+                        >
+                          Nombre Producto
+                        </h6>
+                        <small
+                          class="text-muted fs-8 font-monospace d-block text-truncate"
+                          th:text="${p.presentacion != null ? p.presentacion.nombre : ''}"
+                          >Presentación</small
+                        >
+                      </div>
+                      <div
+                        class="mt-2 text-primary fw-bold font-monospace fs-6"
+                        th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 'POINT', 2, 'COMMA')}"
+                      >
+                        S/ 0.00
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="msjSinProductos"
+                  class="col-12 text-center py-5 d-none"
+                >
+                  <i
+                    class="fi fi-rr-search-alt display-4 text-muted opacity-25 d-block mb-3"
+                  ></i>
+                  <span
+                    class="text-muted fw-bold text-uppercase tracking-wider fs-7"
+                    >No se encontraron productos</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-5 col-xl-4">
+              <div class="card border-0 shadow-lg rounded-4 pos-cart">
+                <div class="card-header text-white p-3 border-0">
+                  <h6 class="fw-bold text-uppercase tracking-wider mb-3 fs-7">
+                    <i class="fi fi-rr-shopping-cart me-2"></i>Orden Actual
+                  </h6>
+                  <div class="d-flex gap-2">
+                    <button
+                      class="btn btn-outline-light flex-grow-1 font-monospace fs-8 tracking-wide btn-mod-active"
+                      id="mod-mesa"
+                      onclick="seleccionarModalidad('LOCAL', this)"
+                    >
+                      MESA
+                    </button>
+                    <button
+                      class="btn btn-outline-light flex-grow-1 font-monospace fs-8 tracking-wide"
+                      id="mod-llevar"
+                      onclick="seleccionarModalidad('LLEVAR', this)"
+                    >
+                      LLEVAR
+                    </button>
+                    <button
+                      class="btn btn-outline-light flex-grow-1 font-monospace fs-8 tracking-wide"
+                      id="mod-delivery"
+                      onclick="seleccionarModalidad('DELIVERY', this)"
+                    >
+                      DELIVERY
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="p-3 border-bottom bg-opacity-50"
+                  id="panelFormularioComanda"
+                >
+                  <div id="form-local" class="formulario-modalidad">
+                    <input
+                      type="text"
+                      id="iptMesaId"
+                      class="form-control form-control-sm font-monospace border shadow-none"
+                      placeholder="ID de la Mesa (Ej: 1, 2, 3)"
+                    />
+                    <small class="text-muted fs-8 font-monospace d-block mt-1"
+                      >El pago se realizará al finalizar el consumo.</small
+                    >
+                  </div>
+
+                  <div id="form-externo" class="formulario-modalidad d-none">
+                    <div class="row g-2">
+                      <div class="col-12">
+                        <input
+                          type="text"
+                          id="iptNombreCliente"
+                          class="form-control form-control-sm border shadow-none fs-7"
+                          placeholder="Nombre del Cliente (Obligatorio)"
+                        />
+                      </div>
+                      <div class="col-6">
+                        <input
+                          type="text"
+                          id="iptDocCliente"
+                          class="form-control form-control-sm border shadow-none fs-7 font-monospace"
+                          placeholder="DNI / RUC"
+                        />
+                      </div>
+                      <div class="col-6">
+                        <input
+                          type="text"
+                          id="iptTelefono"
+                          class="form-control form-control-sm border shadow-none fs-7 font-monospace"
+                          placeholder="Teléfono"
+                        />
+                      </div>
+                      <div class="col-12 d-none" id="divDireccion">
+                        <input
+                          type="text"
+                          id="iptDireccion"
+                          class="form-control form-control-sm border shadow-none fs-7"
+                          placeholder="Dirección de Entrega"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-body p-0 cart-items" id="contenedorCarrito">
+                  <div
+                    class="text-center py-5 mt-5 text-muted"
+                    id="carritoVacio"
+                  >
+                    <i
+                      class="fi fi-rr-shopping-bag display-4 opacity-25 d-block mb-3"
+                    ></i>
+                    <span class="fs-7 font-monospace text-uppercase fw-bold"
+                      >El ticket está vacío</span
+                    >
+                  </div>
+                  <ul class="list-group list-group-flush" id="listaItems"></ul>
+                </div>
+
+                <div
+                  class="card-footer border-top p-3 shadow-lg"
+                  style="z-index: 10"
+                >
+                  <div id="panelPago" class="mb-3 d-none">
+                    <label
+                      class="form-label text-uppercase fw-bold fs-8 text-muted mb-2"
+                      >Método de Cobro Inmediato</label
+                    >
+                    <select
+                      id="selMetodoPago"
+                      class="form-select form-select-sm shadow-none border font-monospace fs-7 fw-bold"
+                    >
+                      <option value="EFECTIVO">EFECTIVO</option>
+                      <option value="YAPE">YAPE</option>
+                      <option value="PLIN">PLIN</option>
+                      <option value="TARJETA">POS / TARJETA</option>
+                    </select>
+                  </div>
+
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-1"
+                  >
+                    <span
+                      class="text-muted fw-bold text-uppercase fs-8 tracking-wider"
+                      >Subtotal</span
+                    >
+                    <span
+                      class="text-dark font-monospace fw-medium fs-7"
+                      id="cartSubtotal"
+                      >S/ 0.00</span
+                    >
+                  </div>
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                  >
+                    <span
+                      class="text-dark fw-bold text-uppercase fs-6 tracking-wider"
+                      >TOTAL</span
+                    >
+                    <span
+                      class="text-success font-monospace fw-bold fs-3 lh-1"
+                      id="cartTotal"
+                      >S/ 0.00</span
+                    >
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btn btn-success w-100 py-3 rounded-3 fw-bold text-uppercase tracking-wider font-monospace fs-6 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                    onclick="procesarCheckout()"
+                    id="btnCobrar"
+                    disabled
+                  >
+                    <i class="fi fi-rr-print"></i> Emitir Comanda
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+      <div
+        id="posToast"
+        class="toast align-items-center text-white border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="d-flex">
+          <div
+            class="toast-body fw-medium font-monospace fs-7"
+            id="posToastMsg"
+          ></div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto shadow-none"
+            data-bs-dismiss="toast"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      let carrito = [];
+      let modalidadActual = "LOCAL";
+      let totalCalculado = 0.0;
+
+      // === EXTRACCIÓN LIMPIA DEL DOM DE THYMELEAF (BYPASS DE SEGURIDAD) ===
+      function agregarItemDesdeTarjeta(elementoHTML) {
+        const id = parseInt(elementoHTML.getAttribute("data-id"));
+        const nombre = elementoHTML.getAttribute("data-nombre");
+        const precio = parseFloat(elementoHTML.getAttribute("data-precio"));
+        agregarAlCarrito(id, nombre, precio);
+      }
+
+      function agregarAlCarrito(id, nombre, precio) {
+        const itemExistente = carrito.find((i) => i.productoId === id);
+        if (itemExistente) {
+          itemExistente.cantidad++;
+          itemExistente.subtotal =
+            itemExistente.cantidad * itemExistente.precio;
+        } else {
+          carrito.push({
+            productoId: id,
+            nombre: nombre,
+            precio: precio,
+            cantidad: 1,
+            subtotal: precio,
+          });
+        }
+        renderizarCarrito();
+      }
+
+      function restarDelCarrito(id) {
+        const index = carrito.findIndex((i) => i.productoId === id);
+        if (index !== -1) {
+          if (carrito[index].cantidad > 1) {
+            carrito[index].cantidad--;
+            carrito[index].subtotal =
+              carrito[index].cantidad * carrito[index].precio;
+          } else {
+            carrito.splice(index, 1);
+          }
+          renderizarCarrito();
+        }
+      }
+
+      function renderizarCarrito() {
+        const lista = document.getElementById("listaItems");
+        const vacio = document.getElementById("carritoVacio");
+        const btnCobrar = document.getElementById("btnCobrar");
+
+        lista.innerHTML = "";
+        totalCalculado = 0.0;
+
+        if (carrito.length === 0) {
+          vacio.classList.remove("d-none");
+          btnCobrar.disabled = true;
+          document.getElementById("cartSubtotal").innerText = "S/ 0.00";
+          document.getElementById("cartTotal").innerText = "S/ 0.00";
+          return;
+        }
+
+        vacio.classList.add("d-none");
+        btnCobrar.disabled = false;
+
+        carrito.forEach((item) => {
+          totalCalculado += item.subtotal;
+          const li = document.createElement("li");
+          li.className =
+            "list-group-item d-flex justify-content-between align-items-center p-3 border-bottom";
+          li.innerHTML = `
+            <div class="flex-grow-1">
+              <h6 class="fw-bold text-dark fs-7 mb-1 lh-sm">${item.nombre}</h6>
+              <div class="text-primary fw-bold font-monospace fs-8">S/ ${item.precio.toFixed(2)} unit.</div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <div class="d-flex align-items-center  rounded-pill border">
+                <button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="restarDelCarrito(${item.productoId})"><i class="fi fi-rr-minus-small"></i></button>
+                <span class="font-monospace fw-bold fs-7 px-2">${item.cantidad}</span>
+                <button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="agregarAlCarrito(${item.productoId}, '${item.nombre.replace(/'/g, "\\'")}', ${item.precio})"><i class="fi fi-rr-plus-small"></i></button>
+              </div>
+              <div class="text-end" style="width: 70px;">
+                <span class="fw-bold text-dark font-monospace fs-6">S/ ${item.subtotal.toFixed(2)}</span>
+              </div>
+            </div>
+          `;
+          lista.appendChild(li);
+        });
+
+        document.getElementById("cartSubtotal").innerText =
+          "S/ " + totalCalculado.toFixed(2);
+        document.getElementById("cartTotal").innerText =
+          "S/ " + totalCalculado.toFixed(2);
+      }
+
+      function filtrarPorCategoria(categoria, btnElement) {
+        document
+          .querySelectorAll("#contenedorCategorias .btn")
+          .forEach((btn) => btn.classList.remove("btn-cat-active"));
+        btnElement.classList.add("btn-cat-active");
+        filtrarCatalogo();
+      }
+
+      function filtrarCatalogo() {
+        const catActiva = document.querySelector(
+          "#contenedorCategorias .btn-cat-active",
+        );
+        const categoria = catActiva
+          ? catActiva.getAttribute("data-cat")
+          : "TODAS";
+        const buscador = document
+          .getElementById("posBuscador")
+          .value.toLowerCase();
+
+        const productos = document.querySelectorAll(".producto-item");
+        let visibles = 0;
+
+        productos.forEach((item) => {
+          const catItem = item.getAttribute("data-categoria").toUpperCase();
+          const nomItem = item.querySelector("h6").innerText.toLowerCase();
+
+          const coincideCat =
+            !categoria ||
+            categoria === "TODAS" ||
+            catItem === categoria.toUpperCase();
+          const coincideTex = nomItem.includes(buscador);
+
+          if (coincideCat && coincideTex) {
+            item.style.display = "";
+            visibles++;
+          } else {
+            item.style.display = "none";
+          }
+        });
+
+        const msj = document.getElementById("msjSinProductos");
+        if (visibles === 0) msj.classList.remove("d-none");
+        else msj.classList.add("d-none");
+      }
+
+      function seleccionarModalidad(mod, btnElement) {
+        modalidadActual = mod;
+        document.querySelectorAll(".card-header .btn").forEach((btn) => {
+          btn.classList.remove("btn-mod-active");
+          btn.classList.replace("btn-light", "btn-outline-light");
+        });
+        btnElement.classList.add("btn-mod-active");
+
+        const formLocal = document.getElementById("form-local");
+        const formExterno = document.getElementById("form-externo");
+        const divDireccion = document.getElementById("divDireccion");
+        const panelPago = document.getElementById("panelPago");
+        const btnCobrar = document.getElementById("btnCobrar");
+
+        if (mod === "LOCAL") {
+          formLocal.classList.remove("d-none");
+          formExterno.classList.add("d-none");
+          panelPago.classList.add("d-none");
+          btnCobrar.innerHTML =
+            '<i class="fi fi-rr-print"></i> Enviar a Cocina';
+        } else {
+          formLocal.classList.add("d-none");
+          formExterno.classList.remove("d-none");
+          panelPago.classList.remove("d-none");
+          btnCobrar.innerHTML =
+            '<i class="fi fi-rr-sack-dollar"></i> Cobrar y Procesar';
+          divDireccion.classList.toggle("d-none", mod !== "DELIVERY");
+        }
+      }
+
+      async function procesarCheckout() {
+        if (carrito.length === 0) return;
+
+        const payload = {
+          modalidad: modalidadActual,
+          nombreCliente: document
+            .getElementById("iptNombreCliente")
+            .value.trim(),
+          mesaId: document.getElementById("iptMesaId").value.trim() || null,
+          telefonoContacto: document.getElementById("iptTelefono").value.trim(),
+          direccionEntrega: document
+            .getElementById("iptDireccion")
+            .value.trim(),
+          requiereCobroInmediato: modalidadActual !== "LOCAL",
+          metodoPago:
+            document.getElementById("selMetodoPago")?.value || "EFECTIVO",
+          tipoComprobante: "TICKET",
+          documentoCliente: document
+            .getElementById("iptDocCliente")
+            .value.trim(),
+          totalCalculado: totalCalculado,
+          items: carrito.map((i) => ({
+            productoId: i.productoId,
+            cantidad: i.cantidad,
+            subtotal: i.subtotal,
+          })),
+        };
+
+        if (modalidadActual !== "LOCAL" && !payload.nombreCliente) {
+          mostrarToast("error", "El nombre del cliente es obligatorio.");
+          return;
+        }
+        if (modalidadActual === "DELIVERY" && !payload.direccionEntrega) {
+          mostrarToast("error", "La dirección es obligatoria para Delivery.");
+          return;
+        }
+
+        const btn = document.getElementById("btnCobrar");
+        const textOriginal = btn.innerHTML;
+        btn.innerHTML =
+          '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
+        btn.disabled = true;
+
+        try {
+          const response = await fetch("/punto-venta/procesar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            mostrarToast("success", "Comanda procesada con éxito!");
+            carrito = [];
+            renderizarCarrito();
+            document
+              .querySelectorAll("input")
+              .forEach((input) => (input.value = ""));
+
+            setTimeout(() => {
+              if (modalidadActual === "DELIVERY")
+                window.location.href = "/delivery/pedidos";
+            }, 1000);
+          } else {
+            mostrarToast("error", "Error: " + data.message);
+          }
+        } catch (error) {
+          mostrarToast("error", "Error de red con el servidor.");
+        } finally {
+          btn.innerHTML = textOriginal;
+        }
+      }
+
+      function mostrarToast(tipo, mensaje) {
+        const toastEl = document.getElementById("posToast");
+        const msgEl = document.getElementById("posToastMsg");
+        toastEl.className = "toast align-items-center text-white border-0";
+        toastEl.classList.add(tipo === "success" ? "bg-success" : "bg-danger");
+        msgEl.innerText = mensaje;
+        new bootstrap.Toast(toastEl, { delay: 3000 }).show();
+      }
+    </script>
+  </body>
+</html>

@@ -22,4 +22,9 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
       "WHERE p.id = :id")
   Optional<Producto> findByIdConCategoriasYPresentaciones(@Param("id") Long id);
 
+  @Query("SELECT p FROM Producto p " +
+      "LEFT JOIN FETCH p.categoria " +
+      "LEFT JOIN FETCH p.presentacion ")
+  List<Producto> findAllConCategoriasYPresentaciones();
+
 }

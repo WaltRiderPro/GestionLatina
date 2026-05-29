@@ -28,7 +28,7 @@
             </a>
           </li>
 
-          <li class="nav-item" sec:authorize="hasAnyAuthority('DELIVERY_VER', 'REPARTIDORES_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Delivery">
+          <li class="nav-item" sec:authorize="hasAnyAuthority('DELIVERY_VER')" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Delivery">
             <a class="menu-link" href="#deliveryTab" role="tab" aria-controls="deliveryTab" aria-selected="false" data-bs-toggle="tab">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="3" width="15" height="13"></rect>
@@ -157,27 +157,45 @@
               </nav>
             </div>
 
-            <div class="tab-pane fade" id="deliveryTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('DELIVERY_VER', 'REPARTIDORES_VER')">
-              <nav class="app-navbar" data-simplebar>
-                <ul class="side-menubar">
-                  <li class="menu-heading">
-                    <span class="menu-label">Servicio a Domicilio</span>
-                  </li>
-                  <li class="menu-item" sec:authorize="hasAuthority('DELIVERY_VER')">
-                    <a class="menu-link" th:href="@{/delivery/monitoreo}">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
-                      <span class="menu-label">Monitoreo de Envíos</span>
-                    </a>
-                  </li>
-                  <li class="menu-item" sec:authorize="hasAuthority('REPARTIDORES_VER')">
-                    <a class="menu-link" th:href="@{/delivery/repartidores}">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></circle><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                      <span class="menu-label">Asignar Repartidores</span>
-                    </a>
-                  </li>
-                </ul>
-              </nav>
-            </div>
+        <div class="tab-pane fade" id="deliveryTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('DELIVERY_VER', 'PEDIDOS_VER')">
+  <nav class="app-navbar" data-simplebar>
+    <ul class="side-menubar">
+      
+      <li class="menu-heading">
+        <span class="menu-label">Servicio a Domicilio</span>
+      </li>
+      
+      <li class="menu-item" sec:authorize="hasAuthority('PEDIDOS_VER')">
+        <a class="menu-link" th:href="@{/delivery/pedidos}">
+          <i class="fi fi-rr-document-signed me-2"></i>
+          <span class="menu-label">Gestión Pedidos Delivery</span>
+        </a>
+      </li>
+      
+      <li class="menu-item" sec:authorize="hasAuthority('PEDIDOS_VER')">
+        <a class="menu-link" th:href="@{/delivery/repartidores}">
+          <i class="fi fi-rr-user-add me-2"></i>
+          <span class="menu-label">Asignar Repartidores</span>
+        </a>
+      </li>
+      
+      <li class="menu-item" sec:authorize="hasAuthority('DELIVERY_VER')">
+        <a class="menu-link" th:href="@{/delivery/monitoreo}">
+          <i class="fi fi-rr-map-marker-home me-2"></i>
+          <span class="menu-label">Monitoreo de Envíos</span>
+        </a>
+      </li>
+
+      <li class="menu-item" sec:authorize="hasAuthority('DELIVERY_VER')">
+        <a class="menu-link" th:href="@{/delivery/mis-despachos}">
+          <i class="fi fi-rr-motorcycle me-2"></i>
+          <span class="menu-label">Mis Despachos (Ruta)</span>
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+</div>
 
             <div class="tab-pane fade" id="catalogoTab" role="tabpanel" tabindex="0" sec:authorize="hasAnyAuthority('PRODUCTOS_VER', 'CATEGORIAS_VER', 'PRESENTACIONES_VER')">
               <nav class="app-navbar" data-simplebar>

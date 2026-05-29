@@ -57,7 +57,7 @@ public class Pedido {
   @JoinColumn(name = "mesa_id")
   private Mesa mesa;
 
-  // Para repartidor:
+  // Para repartidor: SI ES QUE ESTA ES MODALIDAD DELIVERY
 
   @Column(length = 255)
   private String direccionEntrega;
