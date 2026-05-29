@@ -14,5 +14,10 @@ public interface SalonService {
     void agregarProductoAPedido(Long pedidoId, Long productoId, Integer cantidad);
     void guardarMesa(Mesa mesa);
     void eliminarMesa(Long id);
+    void registrarPedidoSalon(Long mesaId, String nombreCliente, String notas, List<Long> productoIds, List<Integer> cantidades);
+    void cancelarPedidoSalon(Long pedidoId);
+    void pagarPedidoSalon(Long pedidoId, String metodoPago);
+    List<Pedido> listarPedidosCocina();
+    void cambiarEstadoCocina(Long pedidoId, String nuevoEstado);
 
 }

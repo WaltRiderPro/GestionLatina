@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <th:block th:replace="~{components/head :: head}"></th:block>
-    <title th:text="${titulo}">Gestión de Mesas | Pollería Latina</title>
+    <title th:text="${titulo}">Gestión de Salón | Pollería Latina</title>
     <style>
-        .mesa-cuadrada {
+        .mesa-tarjeta-cuadrada {
             aspect-ratio: 1 / 1;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: all 0.25s ease-in-out;
         }
-        .mesa-cuadrada:hover {
-            transform: scale(1.03);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.15) !important;
+
+        .mesa-tarjeta-cuadrada:hover {
+            transform: scale(1.04);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
         }
-        .admin-actions {
+
+        .admin-floating-actions {
             opacity: 0;
             transition: opacity 0.2s ease-in-out;
         }
-        .card:hover .admin-actions {
+
+        .card:hover .admin-floating-actions {
             opacity: 1;
         }
     </style>
@@ -32,7 +36,7 @@
 
         <main class="app-wrapper">
             <div class="container-fluid">
-                
+
                 <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                     <span th:text="${success}"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -44,48 +48,53 @@
 
                 <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
                     <div>
-                        <h1 class="h3 mb-0 fw-bold" th:text="${titulo}">Control de Salón y Mesas</h1>
-                        <p class="text-muted mb-0">Administre la estructura física y controle las comandas en tiempo real.</p>
+                        <h1 class="h3 mb-0 fw-bold" th:text="${titulo}">Mapa de Salón - Mesas</h1>
+                        <p class="text-muted mb-0">Gestión fluida de comandas locales y administración de aforo.</p>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCrudMesa" onclick="limpiarFormMesa()">
-                            <i class="fa fa-plus-circle me-1"></i> Añadir Nueva Mesa
+                        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal"
+                            data-bs-target="#modalCrudMesa" onclick="limpiarFormMesa()">
+                            <i class="fa fa-plus-circle me-1"></i> Añadir Mesa Física
                         </button>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4" th:each="m : ${mesas}">
-                        <div class="card shadow-sm border-0 mesa-cuadrada"
-                             th:classappend="${m.estado == 'LIBRE'} ? 'bg-success-subtle border border-success' : (${m.estado == 'OCUPADA'} ? 'bg-danger-subtle border border-danger' : 'bg-warning-subtle border border-warning')">
-                            
-                            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-2 pb-0 px-2">
-                                <span class="badge font-w600 text-1xs" 
-                                      th:classappend="${m.estado == 'LIBRE'} ? 'bg-success' : (${m.estado == 'OCUPADA'} ? 'bg-danger' : 'bg-warning')"
-                                      th:text="${m.estado}"></span>
-                                
-                                <div class="admin-actions">
+                        <div class="card shadow-sm border-0 mesa-tarjeta-cuadrada"
+                            th:classappend="${m.estado == 'LIBRE'} ? 'bg-success-subtle border border-success' : (${m.estado == 'OCUPADA'} ? 'bg-danger-subtle border border-danger' : 'bg-warning-subtle border border-warning')">
+
+                            <div
+                                class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-2 pb-0 px-2">
+                                <span class="badge font-w600 text-1xs"
+                                    th:classappend="${m.estado == 'LIBRE'} ? 'bg-success' : (${m.estado == 'OCUPADA'} ? 'bg-danger' : 'bg-warning')"
+                                    th:text="${m.estado}"></span>
+
+                                <div class="admin-floating-actions">
                                     <button type="button" class="btn btn-primary btn-xs sharp me-1 text-white"
-                                            th:data-id="${m.id}" th:data-numero="${m.numero}" th:data-capacidad="${m.capacidadPersonas}"
-                                            onclick="abrirEditarMesaStructure(this, event)">
+                                        th:data-id="${m.id}" th:data-numero="${m.numero}"
+                                        th:data-capacidad="${m.capacidadPersonas}"
+                                        onclick="abrirEditarEstructuraMesa(this, event)">
                                         <i class="fa fa-edit" style="font-size: 10px;"></i>
                                     </button>
-                                    <a th:href="@{/mesas/eliminar/{id}(id=${m.id})}" class="btn btn-danger btn-xs sharp text-white"
-                                       onclick="cancelEventBubble(event); return confirm('¿Desea dar de baja esta mesa de forma lógica?');">
+                                    <a th:href="@{/mesas/eliminar/{id}(id=${m.id})}"
+                                        class="btn btn-danger btn-xs sharp text-white"
+                                        onclick="detenerBurbujeo(event); return confirm('¿Desea dar de baja esta mesa del salón?');">
                                         <i class="fa fa-trash" style="font-size: 10px;"></i>
                                     </a>
                                 </div>
                             </div>
 
-                            <div class="card-body text-center d-flex flex-column justify-content-center align-items-center p-2"
-                                 th:data-mesa-id="${m.id}" th:data-mesa-numero="${m.numero}" th:data-mesa-estado="${m.estado}"
-                                 onclick="interactuarMesaComanda(this)">
-                                
-                                <h2 class="fw-bold mb-1" th:text="'#' + ${m.numero}">#1</h2>
-                                <small class="text-muted d-block mb-2" th:text="'Cap: ' + ${m.capacidadPersonas} + 'p'"></small>
-                                
-                                <div th:if="${m.estado == 'OCUPADA'}" class="mt-1 live-box" th:data-live-id="${m.id}">
-                                    <span class="d-block fw-bold fs-5 text-danger live-total-label">Cargando...</span>
+                            <div class="card-body text-center d-flex flex-column justify-content-center align-items-center p-2 cursor-pointer"
+                                th:data-mesa-id="${m.id}" th:data-mesa-numero="${m.numero}"
+                                th:data-mesa-estado="${m.estado}" onclick="gestionarClickMesaFlujo(this)">
+
+                                <h1 class="fw-bold mb-1" th:text="'Mesa ' + ${m.numero}">Mesa 1</h1>
+                                <small class="text-muted d-block mb-2"
+                                    th:text="'Capacidad: ' + ${m.capacidadPersonas} + ' pers.'"></small>
+
+                                <div th:if="${m.estado == 'OCUPADA'}" class="mt-1 live-m-box" th:data-live-id="${m.id}">
+                                    <span class="d-block fw-bold fs-5 text-danger live-total-render">Cargando...</span>
                                 </div>
                             </div>
                         </div>
@@ -96,108 +105,133 @@
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title fw-bold" id="crudMesaTitle">Configuración de Estructura</h5>
+                                <h5 class="modal-title fw-bold" id="crudMesaTitle">Registrar Mesa</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <form th:action="@{/mesas/guardar}" th:object="${mesaObj}" method="POST" id="formCrudMesa">
                                 <input type="hidden" th:field="*{id}" id="crudId" />
                                 <div class="modal-body">
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Número de Mesa <span class="text-danger">*</span></label>
-                                        <input type="number" th:field="*{numero}" id="crudNumero" class="form-control" required min="1" placeholder="Ej: 12" />
+                                        <label class="form-label fw-semibold">Número de Mesa <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" th:field="*{numero}" id="crudNumero" class="form-control"
+                                            required min="1" placeholder="Ej: 5" />
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-semibold">Capacidad de Personas <span class="text-danger">*</span></label>
-                                        <input type="number" th:field="*{capacidadPersonas}" id="crudCapacidad" class="form-control" required min="1" placeholder="Ej: 4" />
+                                        <label class="form-label fw-semibold">Capacidad de Personas <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" th:field="*{capacidadPersonas}" id="crudCapacidad"
+                                            class="form-control" required min="1" placeholder="Ej: 4" />
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-danger light" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Estructura</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal fade" id="modalComandaControl" tabindex="-1" aria-hidden="true">
+                <div class="modal fade" id="modalMesaLibre" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold" id="titleMesaLibre">Mesa Disponible</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body text-center p-4">
+                                <i class="fa fa-check-circle text-success mb-3" style="font-size: 50px;"></i>
+                                <p class="fs-5 mb-3 font-w500">¿Deseas iniciar una comanda para esta mesa?</p>
+                                <input type="hidden" id="libreMesaIdInput" />
+                                <button type="button"
+                                    class="btn btn-success w-100 text-white font-w600 py-2 fs-5 shadow"
+                                    onclick="redirigirNuevopedido()">
+                                    <i class="fa fa-utensils me-2"></i> Iniciar Pedido para esta Mesa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="modalMesaOcupada" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title fw-bold" id="comandaModalTitle">Comanda de Mesa</h5>
+                                <h5 class="modal-title fw-bold" id="titleMesaOcupada">Detalle de Comanda Activa</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            
-                            <form th:action="@{/mesas/abrir}" method="POST" id="formAbrirComanda" class="d-none">
-                                <input type="hidden" name="mesaId" id="abrirMesaId" />
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Nombre del Cliente / Identificador de la mesa</label>
-                                        <input type="text" name="nombreCliente" class="form-control text-black" placeholder="Ej: Familia Oliden" />
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1 text-muted">Cliente en Mesa: <span
+                                                class="fw-bold fs-5 text-primary" id="txtClienteMesa">---</span></p>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Indicaciones Iniciales para Cocina</label>
-                                        <textarea name="notasAdicionales" class="form-control text-black" rows="2" placeholder="Ej: Papas crocantes..."></textarea>
+                                    <div class="col-md-6 text-md-end">
+                                        <p class="mb-1 text-muted">Total Consumido: <span
+                                                class="fw-bold fs-4 text-danger" id="txtTotalMesa">S/ 0.00</span></p>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                    <button type="submit" class="btn btn-success text-white">Abrir Mesa Ocupada</button>
+
+                                <div class="table-responsive border rounded mb-3">
+                                    <table class="table table-sm mb-0 align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Producto / Platillo</th>
+                                                <th class="text-center">Precio Unitario</th>
+                                                <th class="text-center">Cantidad</th>
+                                                <th class="text-end">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyConsumo">
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </form>
 
-                            <div id="wrapperMesaOcupada" class="d-none">
-                                <div class="modal-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <p class="mb-1 text-muted">Cliente: <span class="fw-bold fs-5 text-primary" id="lblClienteMesa">---</span></p>
+                                <div class="border rounded p-3 bg-light-subtle mb-3">
+                                    <h6 class="fw-bold text-success mb-2"><i class="fa fa-cash-register me-1"></i>
+                                        Procesar Cierre Express de Mesa</h6>
+                                    <form th:action="@{/mesas/pedido/pagar}" method="POST"
+                                        class="row align-items-end g-2">
+                                        <input type="hidden" name="pedidoId" id="pagoPedidoIdInput" />
+                                        <div class="col-md-8">
+                                            <label class="form-label text-2xs fw-semibold">Seleccionar Método de Pago
+                                                Registrado</label>
+                                            <select name="metodoPago" class="form-select form-select-sm" required>
+                                                <option value="EFECTIVO" selected>Efectivo (Dinero en Gaveta)</option>
+                                                <option value="POS_TARJETA">Tarjeta de Crédito / Débito (POS)</option>
+                                                <option value="YAPE_PLIN">Banca Móvil Digital (Yape / Plin)</option>
+                                            </select>
                                         </div>
-                                        <div class="col-md-6 text-md-end">
-                                            <p class="mb-1 text-muted">Subtotal Acumulado: <span class="fw-bold fs-4 text-danger" id="lblTotalMesa">S/ 0.00</span></p>
-                                        </div>
-                                    </div>
-
-                                    <h6 class="fw-bold mb-2">Detalle de Consumo Activo:</h6>
-                                    <div class="table-responsive border rounded mb-4 bg-light-subtle">
-                                        <table class="table table-sm mb-0 align-middle">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Producto</th>
-                                                    <th class="text-center">Precio Unitario</th>
-                                                    <th class="text-center">Cantidad</th>
-                                                    <th class="text-end">Subtotal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbodyConsumoMesa">
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <form th:action="@{/mesas/agregar-producto}" method="POST" id="formInyectarPlatos">
-                                        <input type="hidden" name="pedidoId" id="inyectarPedidoId" />
-                                        <div class="card p-3 border-dashed">
-                                            <h6 class="fw-bold text-primary mb-3"><i class="fa fa-plus-circle me-1"></i> Añadir Más Productos a esta Orden</h6>
-                                            <div class="row">
-                                                <div class="col-md-7 mb-2">
-                                                    <label class="form-label text-2xs fw-semibold">Seleccionar Platillo / Bebida</label>
-                                                    <select name="productoId" class="form-select text-black" required>
-                                                        <option value="" disabled selected>-- Elija del menú --</option>
-                                                        <option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre} + ' - S/ ' + ${p.precio}"></option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3 mb-2">
-                                                    <label class="form-label text-2xs fw-semibold">Cantidad</label>
-                                                    <input type="number" name="cantidad" value="1" min="1" class="form-control text-black" required />
-                                                </div>
-                                                <div class="col-md-2 mb-2 d-flex align-items-end">
-                                                    <button type="submit" class="btn btn-primary w-100">Pedir</button>
-                                                </div>
-                                            </div>
+                                        <div class="col-md-4">
+                                            <button type="submit"
+                                                class="btn btn-success btn-sm w-100 text-white font-w600"><i
+                                                    class="fa fa-check"></i> Cancelar Cuenta</button>
                                         </div>
                                     </form>
                                 </div>
-                            </div>
 
+                                <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                                    <form th:action="@{/mesas/pedido/cancelar}" method="POST"
+                                        onsubmit="return confirm('¿Seguro que deseas anular esta comanda? Esto eliminará el registro de cocina.');">
+                                        <input type="hidden" name="pedidoId" id="cancelarPedidoIdInput" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm font-w600">
+                                            <i class="fa fa-times-circle me-1"></i> Anular Comanda (Anular)
+                                        </button>
+                                    </form>
+
+                                    <div>
+                                        <button type="button" class="btn btn-secondary btn-sm font-w600 me-1"
+                                            data-bs-dismiss="modal">Cerrar</button>
+                                        <button type="button" class="btn btn-primary btn-sm font-w600 text-white"
+                                            onclick="redirigirAgregarMasPlatos()">
+                                            <i class="fa fa-plus-circle me-1"></i> Servir Más Productos
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -209,18 +243,20 @@
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
 
     <script>
-        function cancelEventBubble(e) {
+        let currentActivePedidoId = null;
+
+        function detenerBurbujeo(e) {
             if (e.stopPropagation) e.stopPropagation();
             else e.cancelBubble = true;
         }
 
-        function abrirEditarMesaStructure(btn, e) {
-            cancelEventBubble(e);
+        function abrirEditarEstructuraMesa(btn, e) {
+            detenerBurbujeo(e);
             document.getElementById('crudMesaTitle').innerText = "Modificar Capacidad de Mesa";
             document.getElementById('crudId').value = btn.getAttribute('data-id');
             document.getElementById('crudNumero').value = btn.getAttribute('data-numero');
             document.getElementById('crudCapacidad').value = btn.getAttribute('data-capacidad');
-            
+
             const modal = new bootstrap.Modal(document.getElementById('modalCrudMesa'));
             modal.show();
         }
@@ -231,42 +267,37 @@
             document.getElementById('crudId').value = "";
         }
 
-        function interactuarMesaComanda(body) {
-            const mesaId = body.getAttribute('data-mesa-id');
-            const numero = body.getAttribute('data-mesa-numero');
-            const estado = body.getAttribute('data-mesa-estado');
-
-            document.getElementById('comandaModalTitle').innerText = "Comanda - Mesa #" + numero;
-            
-            const formAbrir = document.getElementById('formAbrirComanda');
-            const containerOcupada = document.getElementById('wrapperMesaOcupada');
+        function gestionarClickMesaFlujo(div) {
+            const mesaId = div.getAttribute('data-mesa-id');
+            const numero = div.getAttribute('data-mesa-numero');
+            const estado = div.getAttribute('data-mesa-estado');
 
             if (estado === "LIBRE") {
-                formAbrir.classList.remove('d-none');
-                containerOcupada.classList.add('d-none');
-                document.getElementById('abrirMesaId').value = mesaId;
-                
-                const modal = new bootstrap.Modal(document.getElementById('modalComandaControl'));
+                document.getElementById('titleMesaLibre').innerText = "Mesa Disponible #" + numero;
+                document.getElementById('libreMesaIdInput').value = mesaId;
+
+                const modal = new bootstrap.Modal(document.getElementById('modalMesaLibre'));
                 modal.show();
             } else if (estado === "OCUPADA") {
+                document.getElementById('titleMesaOcupada').innerText = "Panel de Control Comanda - Mesa #" + numero;
+
+                // Jalar el consumo en tiempo real de la mesa
                 fetch('/mesas/api/pedido-activo/' + mesaId)
                     .then(r => r.json())
                     .then(data => {
                         if (data && data.id) {
-                            formAbrir.classList.add('d-none');
-                            containerOcupada.classList.remove('d-none');
-                            
-                            document.getElementById('inyectarPedidoId').value = data.id;
-                            document.getElementById('lblClienteMesa').innerText = data.nombreCliente;
-                            document.getElementById('lblTotalMesa').innerText = "S/ " + data.total.toFixed(2);
-                            
-                            const tbody = document.getElementById('tbodyConsumoMesa');
+                            currentActivePedidoId = data.id;
+                            document.getElementById('txtClienteMesa').innerText = data.nombreCliente;
+                            document.getElementById('txtTotalMesa').innerText = "S/ " + data.total.toFixed(2);                          
+                            document.getElementById('pagoPedidoIdInput').value = data.id;
+                            document.getElementById('cancelarPedidoIdInput').value = data.id;
+                            const tbody = document.getElementById('tbodyConsumo');
                             tbody.innerHTML = "";
-                            
+
                             data.detalles.forEach(d => {
                                 const tr = document.createElement('tr');
                                 tr.innerHTML = `
-                                    <td class="fw-bold text-black-theme">${d.productoNombre}</td>
+                                    <td class="fw-bold">${d.productoNombre}</td>
                                     <td class="text-center">S/ ${d.precio.toFixed(2)}</td>
                                     <td class="text-center">${d.cantidad}</td>
                                     <td class="text-end fw-bold">S/ ${d.subtotal.toFixed(2)}</td>
@@ -274,31 +305,57 @@
                                 tbody.appendChild(tr);
                             });
 
-                            const modal = new bootstrap.Modal(document.getElementById('modalComandaControl'));
+                            const modal = new bootstrap.Modal(document.getElementById('modalMesaOcupada'));
                             modal.show();
                         }
                     });
             }
         }
 
-        // Carga de Totales Asíncrona sin colisiones en VS Code
-        document.addEventListener("DOMContentLoaded", function() {
-            const activeBoxes = document.querySelectorAll('.live-box');
-            activeBoxes.forEach(box => {
+        function redirigirNuevopedido() {
+            const mesaId = document.getElementById('libreMesaIdInput').value;
+            // Redirige al flujo de toma de pedido pasándole el ID de la mesa verde
+            window.location.href = "/mesas/pedido/nuevo?mesaId=" + mesaId;
+        }
+
+        function redirigirAgregarMasPlatos() {
+            if (currentActivePedidoId) {
+                window.location.href = "/mesas/pedido/agregar?pedidoId=" + currentActivePedidoId;
+            }
+        }
+
+        function redirigirCajaPago() {
+            // Te mandará al módulo de punto de venta (Caja) que haremos en la Fase 3
+            window.location.href = "/punto-venta";
+        }
+
+        function cancelarPedidoMesaActivo() {
+            if (confirm("¿Estás completamente seguro de que deseas cancelar esta orden de forma profesional? Esto liberará la mesa inmediatamente.")) {
+                // Endpoint de cancelación que programaremos más adelante
+                alert("Orden cancelada. Mesa liberada.");
+                window.location.reload();
+            }
+        }
+
+        // Script unificado de renderizado asíncrono en soles en el Home del Salón
+        document.addEventListener("DOMContentLoaded", function () {
+            const liveBoxes = document.querySelectorAll('.live-m-box');
+            liveBoxes.forEach(box => {
                 const mesaId = box.getAttribute('data-live-id');
-                if(mesaId) {
+                if (mesaId) {
                     fetch('/mesas/api/pedido-activo/' + mesaId)
                         .then(r => r.json())
                         .then(d => {
-                            if(d && d.total) {
-                                box.querySelector('.live-total-label').innerText = "S/ " + d.total.toFixed(2);
+                            if (d && d.total) {
+                                box.querySelector('.live-total-render').innerText = "S/ " + d.total.toFixed(2);
                             }
                         }).catch(() => {
-                            box.querySelector('.live-total-label').innerText = "S/ 0.00";
+                            box.querySelector('.live-total-render').innerText = "S/ 0.00";
                         });
                 }
             });
         });
     </script>
 </body>
+
 </html>

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Gestion.PolleriaLatina.model.DetallePedido;
 import com.Gestion.PolleriaLatina.model.Pedido;
-import com.Gestion.PolleriaLatina.service.SalonService;
+import com.Gestion.PolleriaLatina.repository.PedidoRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,12 +22,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MesaRestController {
 
-    private final SalonService salonService;
+    private final PedidoRepository pedidoRepository;
 
     @GetMapping("/pedido-activo/{mesaId}")
-    public Map<String, Object> obtenerPedidoActivo(@PathVariable Long mesaId) {
+    public Map<String, Object> obtenerPedidoActivoMesa(@PathVariable Long mesaId) {
         Map<String, Object> response = new HashMap<>();
-        Pedido pedido = salonService.obtenerPedidoActivoPorMesa(mesaId);
+        Pedido pedido = pedidoRepository.findActiveOrderByMesaId(mesaId).orElse(null);
         
         if (pedido != null) {
             response.put("id", pedido.getId());
@@ -35,16 +35,16 @@ public class MesaRestController {
             response.put("total", pedido.getTotal());
             response.put("notas", pedido.getNotasAdicionales());
             
-            List<Map<String, Object>> lotePlatos = new ArrayList<>();
+            List<Map<String, Object>> listaItems = new ArrayList<>();
             for (DetallePedido dp : pedido.getDetalles()) {
                 Map<String, Object> item = new HashMap<>();
                 item.put("productoNombre", dp.getProducto().getNombre());
                 item.put("precio", dp.getProducto().getPrecio());
                 item.put("cantidad", dp.getCantidad());
                 item.put("subtotal", dp.getSubtotal());
-                lotePlatos.add(item);
+                listaItems.add(item);
             }
-            response.put("detalles", lotePlatos);
+            response.put("detalles", listaItems);
         }
         return response;
     }

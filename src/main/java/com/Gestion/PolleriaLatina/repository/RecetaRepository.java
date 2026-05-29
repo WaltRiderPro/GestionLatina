@@ -21,4 +21,6 @@ public interface RecetaRepository extends JpaRepository<Receta, Long> {
   List<Receta> findByProductoIdCompleto(@Param("productoId") Long productoId);
 
   Optional<Receta> findByProductoIdAndInsumoId(Long productoId, Long insumoId);
+
+  List<Receta> findByProductoId(Long productoId);
 }
