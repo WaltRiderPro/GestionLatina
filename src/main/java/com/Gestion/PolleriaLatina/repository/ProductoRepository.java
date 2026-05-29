@@ -27,4 +27,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
       "LEFT JOIN FETCH p.presentacion ")
   List<Producto> findAllConCategoriasYPresentaciones();
 
+  @Query("SELECT p FROM Producto p JOIN FETCH p.categoria JOIN FETCH p.presentacion WHERE p.eliminado = false AND p.activo = true ORDER BY p.nombre ASC")
+  List<Producto> findActiveProductsWithRelations();
+
 }
