@@ -78,7 +78,7 @@ body[data-bs-theme="dark"] {
   --bs-success: #009966;
   --bs-info: #ff8c00;
   --bs-warning: #ffba00;
-  --bs-danger: #c21010;
+  --bs-danger: rgb(206, 68, 68), 68, 68), 68, 68), 68, 68), 68, 68), 68, 68), 16, 16);
   --bs-light: #fdf9f9;
   --bs-dark: #2b1a1a;
   --bs-white: #ffffff;

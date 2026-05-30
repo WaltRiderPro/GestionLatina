@@ -20,16 +20,24 @@
       .cursor-pointer {
         cursor: pointer;
       }
+
+      /* Hover suave para tabla de ingredientes */
+      .table-hover tbody tr {
+        transition: all 0.2s ease;
+      }
+      .table-hover tbody tr:hover {
+        background-color: rgba(33, 37, 41, 0.02);
+      }
     </style>
   </head>
 
   <body>
-    <div class="page-layout">
+    <div class="page-layout overflow-hidden">
       <th:block th:replace="~{components/header :: header}"></th:block>
       <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
 
       <main class="app-wrapper">
-        <div class="container-fluid pt-4">
+        <div class="container-fluid pt-4 p-lg-4">
           <div
             class="app-page-head d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4"
           >
@@ -50,7 +58,7 @@
                   >
                 </li>
                 <li
-                  class="breadcrumb-item active text-dark"
+                  class="breadcrumb-item active text-dark fw-bold"
                   aria-current="page"
                 >
                   Fórmula del Plato
@@ -59,21 +67,23 @@
             </nav>
             <a
               th:href="@{/recetas}"
-              class="btn btn-light border fw-semibold shadow-sm text-uppercase font-monospace fs-7"
+              class="btn btn-white border shadow-sm fw-semibold text-uppercase font-monospace fs-7 rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2"
             >
-              <i class="fi fi-rr-arrow-left me-1 align-middle"></i> Volver a la
-              Carta
+              <i class="fi fi-rr-arrow-left"></i> Volver a la Carta
             </a>
           </div>
 
           <div
             th:if="${success}"
-            class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4"
+            class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4 rounded-3"
             role="alert"
           >
             <div class="d-flex align-items-center">
-              <i class="fi fi-rr-check-circle me-2"></i>
-              <span class="fw-medium" th:text="${success}"></span>
+              <i class="fi fi-rr-check-circle me-2 fs-5"></i>
+              <span
+                class="fw-medium font-monospace fs-7"
+                th:text="${success}"
+              ></span>
             </div>
             <button
               type="button"
@@ -84,12 +94,15 @@
           </div>
           <div
             th:if="${error}"
-            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4"
+            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4 rounded-3"
             role="alert"
           >
             <div class="d-flex align-items-center">
-              <i class="fi fi-rr-triangle-warning me-2"></i>
-              <span class="fw-medium" th:text="${error}"></span>
+              <i class="fi fi-rr-triangle-warning me-2 fs-5"></i>
+              <span
+                class="fw-medium font-monospace fs-7"
+                th:text="${error}"
+              ></span>
             </div>
             <button
               type="button"
@@ -99,62 +112,65 @@
             ></button>
           </div>
 
-          <div class="card border shadow-sm rounded-4 mb-4 overflow-hidden">
-            <div
-              class="card-body p-4 bg-light bg-opacity-25 d-flex align-items-center"
-            >
+          <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+            <div class="card-body p-4 d-flex align-items-center">
               <div
-                class="bg-dark text-white rounded-circle p-3 me-3 shadow-sm d-flex align-items-center justify-content-center"
-                style="width: 55px; height: 55px"
+                class="bg-opacity-10 text-dark rounded-circle p-3 me-4 shadow-sm d-flex align-items-center justify-content-center"
+                style="width: 65px; height: 65px"
               >
-                <i class="fi fi-rr-restaurant fs-4"></i>
+                <i class="fi fi-rr-restaurant fs-3"></i>
               </div>
               <div>
                 <h4
-                  class="fw-bold text-dark text-uppercase tracking-wider mb-1 fs-5"
+                  class="fw-bold text-dark text-uppercase tracking-wider mb-2 fs-5"
                   th:text="${producto.nombre}"
                 >
                   Nombre del Producto
                 </h4>
                 <div
-                  class="d-flex flex-wrap gap-4 text-muted font-monospace fs-7 mt-1"
+                  class="d-flex flex-wrap gap-2 text-muted font-monospace fs-8"
                 >
                   <span
-                    ><i class="fi fi-rr-apps me-1"></i>CATEGORÍA:
+                    class="badge bg-light border text-dark px-2 py-1.5 d-inline-flex align-items-center gap-1"
+                  >
+                    <i class="fi fi-rr-apps text-muted"></i> CAT:
                     <strong
-                      class="text-dark text-uppercase"
+                      class="text-uppercase"
                       th:text="${producto.categoria.nombre}"
                       >--</strong
-                    ></span
-                  >
+                    >
+                  </span>
                   <span
-                    ><i class="fi fi-rr-layers me-1"></i>PRESENTACIÓN:
+                    class="badge bg-light border text-dark px-2 py-1.5 d-inline-flex align-items-center gap-1"
+                  >
+                    <i class="fi fi-rr-layers text-muted"></i> PRES:
                     <strong
-                      class="text-dark text-uppercase"
+                      class="text-uppercase"
                       th:text="${producto.presentacion != null ? producto.presentacion.nombre : 'ESTÁNDAR'}"
                       >--</strong
-                    ></span
-                  >
+                    >
+                  </span>
                   <span
-                    ><i class="fi fi-rr-money-bill-wave me-1"></i>PRECIO:
+                    class="badge bg-success-subtle border border-success border-opacity-25 text-success px-2 py-1.5 fs-7 d-inline-flex align-items-center gap-1"
+                  >
+                    <i class="fi fi-rr-money-bill-wave"></i>
                     <strong
-                      class="text-dark fs-6"
                       th:text="'S/ ' + ${#numbers.formatDecimal(producto.precio, 1, 2)}"
                       >S/ 0.00</strong
-                    ></span
-                  >
+                    >
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="row g-4">
+          <div class="row g-4 align-items-stretch">
             <div
               class="col-lg-4"
               sec:authorize="hasAnyAuthority('RECETAS_CREAR', 'RECETAS_EDITAR')"
             >
-              <div class="card border shadow-sm rounded-4">
-                <div class="card-header py-3 bg-transparent border-bottom">
+              <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header p-4 bg-transparent border-bottom">
                   <span
                     class="fs-7 text-uppercase fw-bold text-dark tracking-wide d-flex align-items-center gap-2"
                   >
@@ -162,7 +178,7 @@
                     Componente
                   </span>
                 </div>
-                <div class="card-body py-4">
+                <div class="card-body p-4">
                   <form
                     th:action="@{/recetas/guardar}"
                     th:object="${nuevaReceta}"
@@ -175,12 +191,12 @@
                     <div class="mb-4">
                       <label
                         for="selectInsumo"
-                        class="form-label text-uppercase fs-7 fw-bold text-muted mb-2"
+                        class="form-label text-uppercase fs-8 tracking-wider fw-bold text-muted mb-2"
                         >Materia Prima / Insumo Core</label
                       >
                       <select
                         id="selectInsumo"
-                        class="form-select cursor-pointer shadow-none border"
+                        class="form-select cursor-pointer shadow-none border rounded-3 py-2 fs-7 font-monospace"
                         th:field="*{insumo.id}"
                         required
                       >
@@ -194,44 +210,44 @@
                         ></option>
                       </select>
                       <div
-                        class="form-text small text-muted"
+                        class="form-text small text-muted mt-2"
                         style="font-size: 0.7rem"
                       >
-                        Solo figuran materias primas con stock controlado.
+                        Solo figuran materias primas con stock controlado en
+                        almacén.
                       </div>
                     </div>
 
                     <div class="mb-4">
                       <label
                         for="cantNecesaria"
-                        class="form-label text-uppercase fs-7 fw-bold text-muted mb-2"
+                        class="form-label text-uppercase fs-8 tracking-wider fw-bold text-muted mb-2"
                         >Proporción de Descarga</label
                       >
-                      <div class="input-group">
-                        <input
-                          type="number"
-                          id="cantNecesaria"
-                          step="0.0001"
-                          min="0.0001"
-                          class="form-control font-monospace fw-bold text-center border shadow-none"
-                          th:field="*{cantidadNecesaria}"
-                          placeholder="0.0000"
-                          required
-                        />
-                      </div>
+                      <input
+                        type="number"
+                        id="cantNecesaria"
+                        step="0.0001"
+                        min="0.0001"
+                        class="form-control font-monospace fw-bold fs-6 text-center border shadow-none rounded-3 py-2"
+                        th:field="*{cantidadNecesaria}"
+                        placeholder="0.0000"
+                        required
+                      />
                       <div
-                        class="form-text small text-muted"
+                        class="form-text small text-muted mt-2"
                         style="font-size: 0.7rem"
                       >
-                        Ej: Si gasta 1/4 de pollo entero, coloque 0.2500 Kg. Si
-                        gasta una porción de papas, configure 0.4000 Kg.
+                        Ej: Si gasta 1/4 de pollo entero, coloque
+                        <strong>0.2500</strong>. Si gasta una porción de papas
+                        de 400g, configure <strong>0.4000 Kg</strong>.
                       </div>
                     </div>
 
-                    <div class="d-grid pt-2">
+                    <div class="d-grid mt-4 pt-2">
                       <button
                         type="submit"
-                        class="btn btn-dark fw-bold text-uppercase tracking-wide font-monospace fs-7 py-2.5 d-flex justify-content-center align-items-center gap-1.5"
+                        class="btn btn-dark fw-bold text-uppercase tracking-wide font-monospace fs-7 py-3 rounded-3 d-flex justify-content-center align-items-center gap-2 shadow-sm"
                       >
                         <i class="fi fi-rr-disk"></i> Enlazar Componente
                       </button>
@@ -244,26 +260,36 @@
             <div
               th:class="${#authorization.expression('hasAnyAuthority(''RECETAS_CREAR'', ''RECETAS_EDITAR'')')} ? 'col-lg-8' : 'col-lg-12'"
             >
-              <div class="card border shadow-sm rounded-4 overflow-hidden">
-                <div class="card-body p-0">
-                  <div class="table-responsive">
+              <div
+                class="card border-0 shadow-sm rounded-4 overflow-hidden h-100"
+              >
+                <div class="card-body p-0 d-flex flex-column">
+                  <div class="table-responsive flex-grow-1">
                     <table class="table table-hover align-middle mb-0">
                       <thead
-                        class="table-light text-uppercase fs-7 tracking-wider"
+                        class="bg-light text-uppercase fs-8 tracking-wider text-muted font-monospace border-bottom"
                       >
                         <tr>
-                          <th class="ps-4 text-muted" style="width: 10%">ID</th>
-                          <th class="text-muted" style="width: 45%">
+                          <th class="ps-4 py-3 border-0" style="width: 10%">
+                            ID
+                          </th>
+                          <th class="py-3 border-0" style="width: 40%">
                             Ingrediente de Almacén
                           </th>
-                          <th class="text-muted text-center" style="width: 15%">
+                          <th
+                            class="py-3 border-0 text-center"
+                            style="width: 15%"
+                          >
                             U. Medida
                           </th>
-                          <th class="text-muted text-end" style="width: 15%">
-                            Cantidad Descontable
+                          <th
+                            class="py-3 px-4 border-0 text-end"
+                            style="width: 20%"
+                          >
+                            Cant. Descontable
                           </th>
                           <th
-                            class="text-center text-muted pe-4"
+                            class="py-3 text-center pe-4 border-0"
                             style="width: 15%"
                             sec:authorize="hasAuthority('RECETAS_ELIMINAR')"
                           >
@@ -274,49 +300,48 @@
                       <tbody>
                         <tr th:each="ing : ${ingredientes}">
                           <td
-                            class="ps-4 text-secondary font-monospace small"
+                            class="ps-4 py-3 text-secondary font-monospace fs-7"
                             th:text="${ing.id}"
                           >
                             1
                           </td>
 
-                          <td>
+                          <td class="py-3">
                             <div
-                              class="fw-bold text-dark"
+                              class="fw-bold text-dark fs-7 mb-1"
                               th:text="${ing.insumo.nombre}"
                             >
                               Pollo Entero Crudo
                             </div>
                             <span
-                              class="text-muted font-monospace small d-block"
-                              style="font-size: 0.72rem"
-                              th:text="'STOCK ACTUAL REGISTRADO: ' + ${ing.insumo.stockActual} + ' ' + ${ing.insumo.unidadMedida.abreviatura}"
+                              class="badge bg-opacity-10 text-dark border font-monospace fs-8"
+                              th:text="'STOCK REGISTRADO: ' + ${ing.insumo.stockActual} + ' ' + ${ing.insumo.unidadMedida.abreviatura}"
                               >STOCK: 12 Kg</span
                             >
                           </td>
 
-                          <td class="text-center">
+                          <td class="py-3 text-center">
                             <span
-                              class="badge bg-light text-dark border px-2.5 py-1.5 font-monospace"
+                              class="badge bg-light text-dark border px-2 py-1.5 font-monospace fs-7 shadow-sm"
                               th:text="${ing.insumo.unidadMedida.abreviatura}"
                               >Kg</span
                             >
                           </td>
 
                           <td
-                            class="text-end fw-bold font-monospace fs-6 text-dark"
+                            class="py-3 px-4 text-end fw-bold font-monospace fs-6 text-dark"
                             th:text="${#numbers.formatDecimal(ing.cantidadNecesaria, 1, 'POINT', 4, 'COMMA')}"
                           >
                             0.2500
                           </td>
 
                           <td
-                            class="text-center pe-4"
+                            class="py-3 text-center pe-4"
                             sec:authorize="hasAuthority('RECETAS_ELIMINAR')"
                           >
                             <a
                               th:href="@{/recetas/eliminar/{id}/producto/{prodId}(id=${ing.id}, prodId=${producto.id})}"
-                              class="btn btn-sm btn-action-gray rounded-circle"
+                              class="btn btn-sm btn-outline-danger border-0 rounded-circle p-2"
                               title="Remover Ingrediente de la Fórmula"
                               onclick="
                                 return confirm(
@@ -324,20 +349,27 @@
                                 );
                               "
                             >
-                              <i class="fi fi-rr-trash text-danger"></i>
+                              <i class="fi fi-rr-trash"></i>
                             </a>
                           </td>
                         </tr>
 
                         <tr th:if="${#lists.isEmpty(ingredientes)}">
                           <td colspan="5" class="text-center py-5 text-muted">
-                            <i
-                              class="fi fi-rr-layers display-6 d-block mb-3 opacity-25"
-                            ></i>
-                            <span class="fw-medium"
-                              >Esta fórmula de cocina se encuentra vacía.
-                              Agregue insumos desde el panel de control.</span
+                            <div
+                              class="bg-light rounded-circle d-inline-flex p-4 mb-3"
                             >
+                              <i
+                                class="fi fi-rr-layers display-6 opacity-50"
+                              ></i>
+                            </div>
+                            <br />
+                            <span
+                              class="fw-medium font-monospace fs-7 text-uppercase tracking-wide"
+                            >
+                              Esta fórmula de cocina se encuentra vacía.<br />Agregue
+                              insumos desde el panel de control.
+                            </span>
                           </td>
                         </tr>
                       </tbody>
@@ -351,6 +383,7 @@
       </main>
       <th:block th:replace="~{components/footer :: footer}"></th:block>
     </div>
+
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
   </body>
 </html>

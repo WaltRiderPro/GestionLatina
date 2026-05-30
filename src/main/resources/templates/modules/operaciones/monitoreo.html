@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Monitor de Pedidos | Pollería Latina</title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+      .monitor-card {
+        transition: transform 0.2s;
+        border-left: 4px solid transparent;
+      }
+      .monitor-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+      }
+
+      .border-normal {
+        border-left-color: #0dcaf0;
+      } /* Info: Reciente */
+      .border-warning {
+        border-left-color: #ffc107;
+      } /* Warning: Más de 10 min */
+      .border-danger {
+        border-left-color: #fa4255;
+      } /* Danger: Más de 15 min (Alerta) */
+
+      .timer-badge {
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        transition: all 0.3s ease;
+      }
+      .mesa-badge {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 800;
+        border-radius: 12px;
+      }
+
+      /* Scrollbar oculto para listas internas */
+      .item-list-scroll {
+        max-height: 120px;
+        overflow-y: auto;
+      }
+      .item-list-scroll::-webkit-scrollbar {
+        width: 4px;
+      }
+      .item-list-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      /* Animación de Pulso para Pedidos Demorados */
+      @keyframes pulse-danger {
+        0% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 0 0 5px rgba(220, 53, 69, 0);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+      }
+      .pulse-alert {
+        animation: pulse-danger 1.5s infinite;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout overflow-hidden">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper p-3">
+        <div class="container-fluid p-0">
+          <div
+            class="d-flex align-items-center justify-content-between mb-4 px-2"
+          >
+            <div>
+              <h4 class="fw-bold text-uppercase tracking-wider mb-1">
+                <i class="fi fi-rr-computer me-2"></i>Monitor Central de
+                Comandas
+              </h4>
+              <p class="text-muted small font-monospace mb-0">
+                Vista en vivo de operaciones. Los pedidos en rojo requieren
+                atención inmediata de cocina.
+              </p>
+            </div>
+            <div>
+              <span class="badge font-monospace px-3 py-2 fs-7 shadow-sm"
+                ><i class="fi fi-rr-clock-three me-2"></i
+                ><span id="relojGlobal">00:00:00</span></span
+              >
+            </div>
+          </div>
+
+          <div class="mb-5">
+            <div class="d-flex align-items-center gap-2 mb-3 px-2">
+              <span class="badge rounded-circle p-1"
+                ><i class="fi fi-rr-restaurant"></i
+              ></span>
+              <h5 class="fw-bold text-uppercase tracking-wider mb-0">
+                Atención en Salón (Local)
+              </h5>
+              <span
+                class="badge bg-light border ms-2 font-monospace fs-8"
+                th:text="${#lists.size(pedidosLocal)} + ' Activos'"
+                >0 Activos</span
+              >
+            </div>
+
+            <div class="row g-3">
+              <div
+                class="col-12 col-md-6 col-lg-4 col-xl-3 order-card-container"
+                th:each="p : ${pedidosLocal}"
+                th:data-fecha="${p.fechaRegistro}"
+                th:data-id="${p.id}"
+                th:data-identificador="'Mesa ' + ${p.mesa.numero}"
+              >
+                <div
+                  class="card monitor-card border-normal h-100 shadow-sm rounded-4"
+                >
+                  <div
+                    class="card-header border-bottom p-3 d-flex justify-content-between align-items-center"
+                  >
+                    <div class="d-flex align-items-center gap-2">
+                      <div
+                        class="mesa-badge shadow-sm"
+                        th:text="${p.mesa.numero}"
+                      >
+                        1
+                      </div>
+                      <div>
+                        <span
+                          class="d-block fw-bold fs-7 lh-1 mb-1"
+                          th:text="'Orden #' + ${p.id}"
+                          >Orden #1</span
+                        >
+                        <span
+                          class="badge bg-secondary-subtle border font-monospace"
+                          style="font-size: 0.65rem"
+                          th:text="${p.estado}"
+                          >ESTADO</span
+                        >
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <span
+                        class="badge bg-info bg-opacity-10 text-info border border-info timer-badge fs-6 timer-display"
+                        >00:00</span
+                      >
+                    </div>
+                  </div>
+
+                  <div
+                    class="card-body p-0 item-list-scroll bg-light bg-opacity-50"
+                  >
+                    <ul class="list-group list-group-flush font-monospace fs-7">
+                      <li
+                        class="list-group-item bg-transparent d-flex justify-content-between align-items-start px-3 py-2"
+                        th:each="det : ${p.detalles}"
+                      >
+                        <div class="fw-bold">
+                          <span
+                            class="text-primary me-1"
+                            th:text="${det.cantidad} + 'x'"
+                            >1x</span
+                          >
+                          <span th:text="${det.producto.nombre}">Pollo</span>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="card-footer border-top p-2 text-center"
+                    th:if="${p.notasAdicionales != null and !p.notasAdicionales.empty}"
+                  >
+                    <small class="text-danger fw-bold fs-8 font-monospace"
+                      ><i class="fi fi-rr-comment-alt me-1"></i
+                      >[[${p.notasAdicionales}]]</small
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12" th:if="${#lists.isEmpty(pedidosLocal)}">
+                <div
+                  class="card border-0 bg-transparent shadow-none text-center py-4"
+                >
+                  <span class="text-muted font-monospace fs-7"
+                    ><i class="fi fi-rr-check-circle me-1"></i>Todas las mesas
+                    atendidas.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-lg-6">
+              <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div
+                  class="card-header bg-transparent border-bottom p-3 d-flex align-items-center justify-content-between"
+                >
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning rounded-circle p-1"
+                      ><i class="fi fi-rr-shopping-bag"></i
+                    ></span>
+                    <h6 class="fw-bold text-uppercase tracking-wider mb-0">
+                      Para Llevar
+                    </h6>
+                  </div>
+                  <span
+                    class="badge bg-light border font-monospace fs-8"
+                    th:text="${#lists.size(pedidosLlevar)} + ' Esperando'"
+                    >0 Esperando</span
+                  >
+                </div>
+
+                <div
+                  class="card-body p-3"
+                  style="max-height: 400px; overflow-y: auto"
+                >
+                  <div class="row g-2">
+                    <div
+                      class="col-12 order-card-container"
+                      th:each="p : ${pedidosLlevar}"
+                      th:data-fecha="${p.fechaRegistro}"
+                      th:data-id="${p.id}"
+                      th:data-identificador="'Para Llevar (#' + ${p.id} + ')'"
+                    >
+                      <div
+                        class="card monitor-card border-normal border-1 shadow-none bg-light bg-opacity-50"
+                      >
+                        <div
+                          class="card-body p-2 d-flex justify-content-between align-items-center"
+                        >
+                          <div>
+                            <span
+                              class="fw-bold fs-7 d-block"
+                              th:text="${p.nombreCliente}"
+                              >Cliente</span
+                            >
+                            <small class="text-muted font-monospace fs-8"
+                              >#[[${p.id}]] - [[${p.detalles.size()}]]
+                              Ítems</small
+                            >
+                          </div>
+                          <div class="text-end">
+                            <span
+                              class="bg-opacity-10 border timer-badge fs-7 timer-display d-block mb-1"
+                              >00:00</span
+                            >
+                            <span
+                              class="badge bg-secondary-subtle border font-monospace"
+                              style="font-size: 0.6rem"
+                              th:text="${p.estado}"
+                              >ESTADO</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="col-12 text-center py-4"
+                      th:if="${#lists.isEmpty(pedidosLlevar)}"
+                    >
+                      <span class="text-muted font-monospace fs-8"
+                        >Sin pedidos para llevar en cola.</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div
+                  class="card-header bg-transparent border-bottom p-3 d-flex align-items-center justify-content-between"
+                >
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success rounded-circle p-1"
+                      ><i class="fi fi-rr-motorcycle"></i
+                    ></span>
+                    <h6 class="fw-bold text-uppercase tracking-wider mb-0">
+                      Delivery (Domicilio)
+                    </h6>
+                  </div>
+                  <span
+                    class="badge bg-light border font-monospace fs-8"
+                    th:text="${#lists.size(pedidosDelivery)} + ' En Cola'"
+                    >0 En Cola</span
+                  >
+                </div>
+
+                <div
+                  class="card-body p-3"
+                  style="max-height: 400px; overflow-y: auto"
+                >
+                  <div class="row g-2">
+                    <div
+                      class="col-12 order-card-container"
+                      th:each="p : ${pedidosDelivery}"
+                      th:data-fecha="${p.fechaRegistro}"
+                      th:data-id="${p.id}"
+                      th:data-identificador="'Delivery (#' + ${p.id} + ')'"
+                    >
+                      <div
+                        class="card monitor-card border-normal border-1 shadow-none bg-light bg-opacity-50"
+                      >
+                        <div
+                          class="card-body p-2 d-flex justify-content-between align-items-center"
+                        >
+                          <div>
+                            <span
+                              class="fw-bold fs-7 d-block"
+                              th:text="${p.nombreCliente}"
+                              >Cliente</span
+                            >
+                            <small class="text-muted font-monospace fs-8"
+                              ><i class="fi fi-rr-marker me-1"></i
+                              >[[${p.direccionEntrega}]]</small
+                            >
+                          </div>
+                          <div class="text-end">
+                            <span
+                              class="badge bg-opacity-10 border timer-badge fs-7 timer-display d-block mb-1"
+                              >00:00</span
+                            >
+                            <span
+                              class="badge bg-secondary-subtle border font-monospace"
+                              style="font-size: 0.6rem"
+                              th:text="${p.estado}"
+                              >ESTADO</span
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="col-12 text-center py-4"
+                      th:if="${#lists.isEmpty(pedidosDelivery)}"
+                    >
+                      <span class="text-muted font-monospace fs-8"
+                        >Sin pedidos de delivery pendientes.</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      class="toast-container position-fixed bottom-0 end-0 p-3"
+      style="z-index: 1100"
+      id="toastContainer"
+    ></div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      // Almacena los IDs de los pedidos que ya lanzaron alerta para no spamear la pantalla
+      let alertasLanzadas = new Set();
+
+      document.addEventListener("DOMContentLoaded", function () {
+        actualizarRelojGlobal();
+        actualizarCronometros();
+
+        setInterval(actualizarRelojGlobal, 1000);
+        setInterval(actualizarCronometros, 1000); // Actualiza los relojes de las tarjetas cada 1s para que se vea fluído
+
+        // Auto-refresh de la página entera cada 60 segundos para traer pedidos nuevos
+        setInterval(() => {
+          location.reload();
+        }, 60000);
+      });
+
+      function actualizarRelojGlobal() {
+        const ahora = new Date();
+        const horaStr = ahora.toLocaleTimeString("es-PE", {
+          hour12: true,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        document.getElementById("relojGlobal").innerText = horaStr;
+      }
+
+      function actualizarCronometros() {
+        const tarjetas = document.querySelectorAll(".order-card-container");
+        const ahora = new Date();
+
+        tarjetas.forEach((tarjeta) => {
+          const stringFecha = tarjeta.getAttribute("data-fecha");
+          const pedidoId = tarjeta.getAttribute("data-id");
+          const identificador = tarjeta.getAttribute("data-identificador"); // Ej: "Mesa 5" o "Delivery #12"
+
+          if (!stringFecha) return;
+
+          // Convertir la fecha ISO que viene del backend de forma segura
+          const horaRegistro = new Date(stringFecha);
+          const diferenciaMs = ahora - horaRegistro;
+
+          if (diferenciaMs < 0) return;
+
+          const totalSegundos = Math.floor(diferenciaMs / 1000);
+          const minutos = Math.floor(totalSegundos / 60);
+          const segundos = totalSegundos % 60;
+
+          const strMinutos = minutos.toString().padStart(2, "0");
+          const strSegundos = segundos.toString().padStart(2, "0");
+
+          const display = tarjeta.querySelector(".timer-display");
+          const cardBorder = tarjeta.querySelector(".monitor-card");
+
+          if (display) {
+            display.innerText = `${strMinutos}:${strSegundos}`;
+
+            // ===============================================
+            // LÓGICA COMERCIAL DE ALARMAS (Tiempos de Cocina)
+            // ===============================================
+
+            // ZONA ROJA: Más de 15 Minutos (Fuego)
+            if (minutos >= 15) {
+              display.className =
+                "badge   border border-danger timer-badge fs-6 timer-display pulse-alert";
+              cardBorder.classList.remove("border-normal", "border-warning");
+              cardBorder.classList.add("border-danger");
+
+              // Disparar Alerta (Toast) solo una vez por pedido
+              if (!alertasLanzadas.has(pedidoId)) {
+                lanzarAlertaRoja(
+                  `¡ATENCIÓN! El pedido de ${identificador} lleva ${minutos} minutos esperando. ¡Acelerar despacho!`,
+                );
+                alertasLanzadas.add(pedidoId);
+              }
+            }
+            // ZONA AMARILLA: Más de 10 Minutos (Retraso)
+            else if (minutos >= 10) {
+              display.className =
+                "badge bg-warning  border border-warning timer-badge fs-6 timer-display";
+              cardBorder.classList.remove("border-normal", "border-danger");
+              cardBorder.classList.add("border-warning");
+            }
+            // ZONA ÓPTIMA: Menos de 10 minutos
+            else {
+              display.className =
+                "badge bg-info bg-opacity-10 text-info border border-info timer-badge fs-6 timer-display";
+            }
+          }
+        });
+      }
+
+      // Función para construir y mostrar el Toast dinámico
+      function lanzarAlertaRoja(mensaje) {
+        const container = document.getElementById("toastContainer");
+
+        const idToast = "toast-" + Math.random().toString(36).substr(2, 9);
+        const toastHTML = `
+          <div id="${idToast}" class="toast align-items-center   border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex p-1">
+              <div class="toast-body fw-bold font-monospace fs-7 d-flex align-items-center gap-2">
+                <i class="fi fi-rr-flame fs-5"></i> ${mensaje}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+        `;
+
+        container.insertAdjacentHTML("beforeend", toastHTML);
+
+        const toastEl = document.getElementById(idToast);
+        const toast = new bootstrap.Toast(toastEl, { delay: 10000 }); // Se queda 10 segundos
+        toast.show();
+
+        // Opcional: Reproducir un sonido de campana leve si el navegador lo permite
+        try {
+          // const audio = new Audio('/sounds/bell.mp3'); audio.play();
+        } catch (e) {}
+      }
+    </script>
+  </body>
+</html>

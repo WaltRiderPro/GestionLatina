@@ -17,7 +17,6 @@
         cursor: pointer;
       }
 
-      /* Estilos POS Especializados */
       .pos-catalog {
         height: calc(100vh - 120px);
         overflow-y: auto;
@@ -53,7 +52,6 @@
         border-color: #198754 !important;
       }
 
-      /* Ocultar barra de scroll para que se vea limpio */
       ::-webkit-scrollbar {
         width: 6px;
       }
@@ -77,7 +75,7 @@
           <div class="row g-3">
             <div class="col-lg-7 col-xl-8 pos-catalog">
               <div
-                class="border-1 shadow-sm rounded-4 mb-3 position-sticky top-0"
+                class="border-0 shadow-sm rounded-4 mb-3 position-sticky top-0"
               >
                 <div class="card-body p-3">
                   <div
@@ -226,14 +224,30 @@
                   id="panelFormularioComanda"
                 >
                   <div id="form-local" class="formulario-modalidad">
-                    <input
-                      type="text"
-                      id="iptMesaId"
-                      class="form-control form-control-sm font-monospace border shadow-none"
-                      placeholder="ID de la Mesa (Ej: 1, 2, 3)"
-                    />
-                    <small class="text-muted fs-8 font-monospace d-block mt-1"
-                      >El pago se realizará al finalizar el consumo.</small
+                    <div class="input-group">
+                      <span class="input-group-text border-end-0 text-muted"
+                        ><i class="fi fi-rr-restaurant"></i
+                      ></span>
+                      <input
+                        type="number"
+                        id="iptMesaId"
+                        class="form-control border-start-0 shadow-none font-monospace fs-7 fw-bold"
+                        placeholder="Número de Mesa"
+                        oninput="resetearEstadoMesa()"
+                      />
+                      <button
+                        class="btn btn-dark fw-bold font-monospace fs-8 tracking-wider px-3"
+                        type="button"
+                        onclick="buscarMesaActiva()"
+                      >
+                        BUSCAR
+                      </button>
+                    </div>
+                    <small
+                      class="text-muted fs-8 font-monospace d-block mt-2"
+                      id="hintMesa"
+                      >Digite el número para abrir mesa o busque una para
+                      cobrarla.</small
                     >
                   </div>
 
@@ -290,14 +304,11 @@
                   <ul class="list-group list-group-flush" id="listaItems"></ul>
                 </div>
 
-                <div
-                  class="card-footer border-top p-3 shadow-lg"
-                  style="z-index: 10"
-                >
+                <div class="card-footer border-top p-3 shadow-lg">
                   <div id="panelPago" class="mb-3 d-none">
                     <label
                       class="form-label text-uppercase fw-bold fs-8 text-muted mb-2"
-                      >Método de Cobro Inmediato</label
+                      >Método de Cobro</label
                     >
                     <select
                       id="selMetodoPago"
@@ -339,12 +350,12 @@
 
                   <button
                     type="button"
-                    class="btn btn-success w-100 py-3 rounded-3 fw-bold text-uppercase tracking-wider font-monospace fs-6 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                    class="btn btn-dark w-100 py-3 rounded-3 fw-bold text-uppercase tracking-wider font-monospace fs-6 shadow-sm d-flex align-items-center justify-content-center gap-2"
                     onclick="procesarCheckout()"
                     id="btnCobrar"
                     disabled
                   >
-                    <i class="fi fi-rr-print"></i> Emitir Comanda
+                    <i class="fi fi-rr-print"></i> Enviar a Cocina
                   </button>
                 </div>
               </div>
@@ -383,8 +394,14 @@
       let modalidadActual = "LOCAL";
       let totalCalculado = 0.0;
 
-      // === EXTRACCIÓN LIMPIA DEL DOM DE THYMELEAF (BYPASS DE SEGURIDAD) ===
+      // VARIABLES PARA CONTROL DE MESAS EXISTENTES
+      let pedidoIdActivo = null;
+      let cobrandoMesa = false;
+
+      // 1. CARGA DE CARRITO
       function agregarItemDesdeTarjeta(elementoHTML) {
+        if (cobrandoMesa) return; // Si estamos cobrando una mesa, no podemos agregar platos nuevos aquí (se hace en edición de pedido normal)
+
         const id = parseInt(elementoHTML.getAttribute("data-id"));
         const nombre = elementoHTML.getAttribute("data-nombre");
         const precio = parseFloat(elementoHTML.getAttribute("data-precio"));
@@ -410,6 +427,7 @@
       }
 
       function restarDelCarrito(id) {
+        if (cobrandoMesa) return; // Bloqueado si está en modo cobro
         const index = carrito.findIndex((i) => i.productoId === id);
         if (index !== -1) {
           if (carrito[index].cantidad > 1) {
@@ -444,6 +462,14 @@
 
         carrito.forEach((item) => {
           totalCalculado += item.subtotal;
+
+          // Si estamos cobrando una mesa, ocultamos los botones de + y - para evitar manipulaciones
+          const botonesCantidad = cobrandoMesa
+            ? `<span class="font-monospace fw-bold fs-7 px-3 text-secondary">Cant: ${item.cantidad}</span>`
+            : `<button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="restarDelCarrito(${item.productoId})"><i class="fi fi-rr-minus-small"></i></button>
+               <span class="font-monospace fw-bold fs-7 px-2">${item.cantidad}</span>
+               <button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="agregarAlCarrito(${item.productoId}, '${item.nombre.replace(/'/g, "\\'")}', ${item.precio})"><i class="fi fi-rr-plus-small"></i></button>`;
+
           const li = document.createElement("li");
           li.className =
             "list-group-item d-flex justify-content-between align-items-center p-3 border-bottom";
@@ -454,9 +480,7 @@
             </div>
             <div class="d-flex align-items-center gap-3">
               <div class="d-flex align-items-center  rounded-pill border">
-                <button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="restarDelCarrito(${item.productoId})"><i class="fi fi-rr-minus-small"></i></button>
-                <span class="font-monospace fw-bold fs-7 px-2">${item.cantidad}</span>
-                <button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="agregarAlCarrito(${item.productoId}, '${item.nombre.replace(/'/g, "\\'")}', ${item.precio})"><i class="fi fi-rr-plus-small"></i></button>
+                ${botonesCantidad}
               </div>
               <div class="text-end" style="width: 70px;">
                 <span class="fw-bold text-dark font-monospace fs-6">S/ ${item.subtotal.toFixed(2)}</span>
@@ -472,6 +496,187 @@
           "S/ " + totalCalculado.toFixed(2);
       }
 
+      // 2. BUSCADOR DE MESAS EN LA API REST
+      async function buscarMesaActiva() {
+        const numMesa = document.getElementById("iptMesaId").value.trim();
+        if (!numMesa) {
+          mostrarToast("error", "Ingrese un número de mesa para buscar.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`/punto-venta/api/mesa/${numMesa}`);
+          const data = await response.json();
+
+          if (response.ok) {
+            mostrarToast(
+              "success",
+              "Cuenta de Mesa #" + numMesa + " recuperada.",
+            );
+
+            // Llenamos el entorno con los datos existentes
+            pedidoIdActivo = data.pedidoId;
+            cobrandoMesa = true;
+            carrito = data.items; // Los items ya vienen formateados desde el Controller
+            renderizarCarrito();
+
+            // Transformamos la UI para modo COBRO
+            document.getElementById("panelPago").classList.remove("d-none");
+            const hint = document.getElementById("hintMesa");
+            hint.innerText =
+              "Cobrando cuenta actual. La mesa se liberará tras el pago.";
+            hint.classList.replace("text-muted", "text-warning");
+
+            const btnCobrar = document.getElementById("btnCobrar");
+            btnCobrar.classList.replace("btn-dark", "btn-success");
+            btnCobrar.innerHTML =
+              '<i class="fi fi-rr-sack-dollar"></i> Cobrar y Liberar Mesa';
+          } else {
+            mostrarToast("error", data.message);
+            resetearEstadoMesa(); // Si no la encuentra, asumimos que va a abrir una nueva
+          }
+        } catch (error) {
+          mostrarToast("error", "Error de red al buscar la mesa.");
+        }
+      }
+
+      // Si el cajero borra o cambia el número, reseteamos el modo cobro para crear pedido nuevo
+      function resetearEstadoMesa() {
+        if (cobrandoMesa) {
+          pedidoIdActivo = null;
+          cobrandoMesa = false;
+          carrito = [];
+          renderizarCarrito();
+
+          document.getElementById("panelPago").classList.add("d-none");
+          const hint = document.getElementById("hintMesa");
+          hint.innerText =
+            "Digite el número para abrir mesa o busque una para cobrarla.";
+          hint.classList.replace("text-warning", "text-muted");
+
+          const btnCobrar = document.getElementById("btnCobrar");
+          btnCobrar.classList.replace("btn-success", "btn-dark");
+          btnCobrar.innerHTML =
+            '<i class="fi fi-rr-print"></i> Enviar a Cocina';
+        }
+      }
+
+      // 3. SELECCIÓN DE MODALIDAD
+      function seleccionarModalidad(mod, btnElement) {
+        modalidadActual = mod;
+
+        // Reset general de variables
+        resetearEstadoMesa();
+        carrito = [];
+        renderizarCarrito();
+
+        document.querySelectorAll(".card-header .btn").forEach((btn) => {
+          btn.classList.remove("btn-mod-active");
+          btn.classList.replace("btn-light", "btn-outline-light");
+        });
+        btnElement.classList.add("btn-mod-active");
+
+        const formLocal = document.getElementById("form-local");
+        const formExterno = document.getElementById("form-externo");
+        const divDireccion = document.getElementById("divDireccion");
+        const panelPago = document.getElementById("panelPago");
+        const btnCobrar = document.getElementById("btnCobrar");
+
+        if (mod === "LOCAL") {
+          formLocal.classList.remove("d-none");
+          formExterno.classList.add("d-none");
+          panelPago.classList.add("d-none");
+          btnCobrar.classList.replace("btn-success", "btn-dark");
+          btnCobrar.innerHTML =
+            '<i class="fi fi-rr-print"></i> Enviar a Cocina';
+        } else {
+          formLocal.classList.add("d-none");
+          formExterno.classList.remove("d-none");
+          panelPago.classList.remove("d-none");
+          btnCobrar.classList.replace("btn-dark", "btn-success");
+          btnCobrar.innerHTML =
+            '<i class="fi fi-rr-sack-dollar"></i> Cobrar y Procesar';
+          divDireccion.classList.toggle("d-none", mod !== "DELIVERY");
+        }
+      }
+
+      // 4. CHECKOUT FINAL
+      async function procesarCheckout() {
+        if (carrito.length === 0) return;
+
+        const payload = {
+          pedidoId: pedidoIdActivo, // Enviamos el ID si estamos cobrando, o null si es nuevo
+          modalidad: modalidadActual,
+          nombreCliente: document
+            .getElementById("iptNombreCliente")
+            .value.trim(),
+          numeroMesa: document.getElementById("iptMesaId").value.trim() || null,
+          telefonoContacto: document.getElementById("iptTelefono").value.trim(),
+          direccionEntrega: document
+            .getElementById("iptDireccion")
+            .value.trim(),
+
+          // Requiere cobro si es Delivery/Llevar, o si buscamos una mesa explícitamente para cobrarla
+          requiereCobroInmediato: modalidadActual !== "LOCAL" || cobrandoMesa,
+
+          metodoPago:
+            document.getElementById("selMetodoPago")?.value || "EFECTIVO",
+          tipoComprobante: "TICKET",
+          documentoCliente: document
+            .getElementById("iptDocCliente")
+            .value.trim(),
+          totalCalculado: totalCalculado,
+          items: carrito.map((i) => ({
+            productoId: i.productoId,
+            cantidad: i.cantidad,
+            subtotal: i.subtotal,
+          })),
+        };
+
+        if (modalidadActual === "LOCAL" && !payload.numeroMesa) {
+          mostrarToast("error", "Indique el número de mesa.");
+          return;
+        }
+
+        const btn = document.getElementById("btnCobrar");
+        const textOriginal = btn.innerHTML;
+        btn.innerHTML =
+          '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
+        btn.disabled = true;
+
+        try {
+          const response = await fetch("/punto-venta/procesar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+
+          if (response.ok) {
+            mostrarToast("success", data.message);
+
+            // Limpieza general post-venta
+            resetearEstadoMesa();
+            document.getElementById("iptMesaId").value = "";
+            document
+              .querySelectorAll("#form-externo input")
+              .forEach((input) => (input.value = ""));
+
+            setTimeout(() => {
+              if (modalidadActual === "DELIVERY")
+                window.location.href = "/delivery/pedidos";
+            }, 1200);
+          } else {
+            mostrarToast("error", "Error: " + data.message);
+          }
+        } catch (error) {
+          mostrarToast("error", "Error de comunicación con la caja.");
+        } finally {
+          btn.innerHTML = textOriginal;
+        }
+      }
+
+      // 5. FILTROS DEL CATÁLOGO
       function filtrarPorCategoria(categoria, btnElement) {
         document
           .querySelectorAll("#contenedorCategorias .btn")
@@ -517,116 +722,13 @@
         else msj.classList.add("d-none");
       }
 
-      function seleccionarModalidad(mod, btnElement) {
-        modalidadActual = mod;
-        document.querySelectorAll(".card-header .btn").forEach((btn) => {
-          btn.classList.remove("btn-mod-active");
-          btn.classList.replace("btn-light", "btn-outline-light");
-        });
-        btnElement.classList.add("btn-mod-active");
-
-        const formLocal = document.getElementById("form-local");
-        const formExterno = document.getElementById("form-externo");
-        const divDireccion = document.getElementById("divDireccion");
-        const panelPago = document.getElementById("panelPago");
-        const btnCobrar = document.getElementById("btnCobrar");
-
-        if (mod === "LOCAL") {
-          formLocal.classList.remove("d-none");
-          formExterno.classList.add("d-none");
-          panelPago.classList.add("d-none");
-          btnCobrar.innerHTML =
-            '<i class="fi fi-rr-print"></i> Enviar a Cocina';
-        } else {
-          formLocal.classList.add("d-none");
-          formExterno.classList.remove("d-none");
-          panelPago.classList.remove("d-none");
-          btnCobrar.innerHTML =
-            '<i class="fi fi-rr-sack-dollar"></i> Cobrar y Procesar';
-          divDireccion.classList.toggle("d-none", mod !== "DELIVERY");
-        }
-      }
-
-      async function procesarCheckout() {
-        if (carrito.length === 0) return;
-
-        const payload = {
-          modalidad: modalidadActual,
-          nombreCliente: document
-            .getElementById("iptNombreCliente")
-            .value.trim(),
-          mesaId: document.getElementById("iptMesaId").value.trim() || null,
-          telefonoContacto: document.getElementById("iptTelefono").value.trim(),
-          direccionEntrega: document
-            .getElementById("iptDireccion")
-            .value.trim(),
-          requiereCobroInmediato: modalidadActual !== "LOCAL",
-          metodoPago:
-            document.getElementById("selMetodoPago")?.value || "EFECTIVO",
-          tipoComprobante: "TICKET",
-          documentoCliente: document
-            .getElementById("iptDocCliente")
-            .value.trim(),
-          totalCalculado: totalCalculado,
-          items: carrito.map((i) => ({
-            productoId: i.productoId,
-            cantidad: i.cantidad,
-            subtotal: i.subtotal,
-          })),
-        };
-
-        if (modalidadActual !== "LOCAL" && !payload.nombreCliente) {
-          mostrarToast("error", "El nombre del cliente es obligatorio.");
-          return;
-        }
-        if (modalidadActual === "DELIVERY" && !payload.direccionEntrega) {
-          mostrarToast("error", "La dirección es obligatoria para Delivery.");
-          return;
-        }
-
-        const btn = document.getElementById("btnCobrar");
-        const textOriginal = btn.innerHTML;
-        btn.innerHTML =
-          '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
-        btn.disabled = true;
-
-        try {
-          const response = await fetch("/punto-venta/procesar", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const data = await response.json();
-
-          if (response.ok) {
-            mostrarToast("success", "Comanda procesada con éxito!");
-            carrito = [];
-            renderizarCarrito();
-            document
-              .querySelectorAll("input")
-              .forEach((input) => (input.value = ""));
-
-            setTimeout(() => {
-              if (modalidadActual === "DELIVERY")
-                window.location.href = "/delivery/pedidos";
-            }, 1000);
-          } else {
-            mostrarToast("error", "Error: " + data.message);
-          }
-        } catch (error) {
-          mostrarToast("error", "Error de red con el servidor.");
-        } finally {
-          btn.innerHTML = textOriginal;
-        }
-      }
-
       function mostrarToast(tipo, mensaje) {
         const toastEl = document.getElementById("posToast");
         const msgEl = document.getElementById("posToastMsg");
         toastEl.className = "toast align-items-center text-white border-0";
         toastEl.classList.add(tipo === "success" ? "bg-success" : "bg-danger");
         msgEl.innerText = mensaje;
-        new bootstrap.Toast(toastEl, { delay: 3000 }).show();
+        new bootstrap.Toast(toastEl, { delay: 3500 }).show();
       }
     </script>
   </body>

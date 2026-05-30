@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.Gestion.PolleriaLatina.dto.PedidoRequestDTO;
 import com.Gestion.PolleriaLatina.model.DetallePedido;
+import com.Gestion.PolleriaLatina.model.Mesa;
 import com.Gestion.PolleriaLatina.model.Pedido;
 import com.Gestion.PolleriaLatina.model.Producto;
 import com.Gestion.PolleriaLatina.model.Usuario;
 import com.Gestion.PolleriaLatina.model.Venta;
+import com.Gestion.PolleriaLatina.repository.MesaRepository;
 import com.Gestion.PolleriaLatina.repository.PedidoRepository;
 import com.Gestion.PolleriaLatina.repository.ProductoRepository;
 import com.Gestion.PolleriaLatina.repository.UsuarioRepository;
@@ -28,6 +30,7 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
   private final ProductoRepository productoRepository;
   private final VentaRepository ventaRepository;
   private final UsuarioRepository usuarioRepository;
+  private final MesaRepository mesaRepository; 
 
   @Override
   @Transactional
@@ -36,53 +39,78 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
     Usuario cajero = usuarioRepository.findByUsername(usernameCajero)
         .orElseThrow(() -> new RuntimeException("Cajero no autorizado o sesión inválida."));
 
-    Pedido pedido = Pedido.builder()
-        .nombreCliente(request.getNombreCliente() != null && !request.getNombreCliente().trim().isEmpty()
-            ? request.getNombreCliente()
-            : "Cliente General")
-        .modalidad(request.getModalidad().toUpperCase())
-        .estado("REGISTRADO")
-        .fechaRegistro(LocalDateTime.now())
-        .notasAdicionales(request.getNotasAdicionales())
-        .build();
-    if ("DELIVERY".equalsIgnoreCase(pedido.getModalidad())) {
-      pedido.setDireccionEntrega(request.getDireccionEntrega());
-      pedido.setReferenciaEntrega(request.getReferenciaEntrega());
-      pedido.setTelefonoContacto(request.getTelefonoContacto());
-      pedido.setCostoEnvio(0.0);
-    } else if ("LOCAL".equalsIgnoreCase(pedido.getModalidad())) {
-
-      // PRIMERO GESTION DE MESAS
-
-      // Mesa mesa = mesaRepository.findById(request.getMesaId()).orElseThrow(...);
-      // pedido.setMesa(mesa);
-    }
-
-    List<DetallePedido> detalles = new ArrayList<>();
+    Pedido pedido;
     double totalBruto = 0.0;
 
-    for (PedidoRequestDTO.ItemCarritoDTO item : request.getItems()) {
-      Producto producto = productoRepository.findById(item.getProductoId())
-          .orElseThrow(() -> new RuntimeException("Producto no encontrado en catálogo: " + item.getProductoId()));
+    if (request.getPedidoId() != null) {
+      pedido = pedidoRepository.findById(request.getPedidoId())
+          .orElseThrow(() -> new RuntimeException("El pedido original no existe."));
 
-      Double subtotalItem = producto.getPrecio() * item.getCantidad();
-      totalBruto += subtotalItem;
+      totalBruto = pedido.getTotal();
 
-      DetallePedido detalle = DetallePedido.builder()
-          .pedido(pedido)
-          .producto(producto)
-          .cantidad(item.getCantidad())
-          .subtotal(subtotalItem)
-          .build();
+      if (request.isRequiereCobroInmediato()) {
+        pedido.setEstado("PAGADO");
 
-      detalles.add(detalle);
-
-      // FUTURO: Si activas el descuento automático de recetas en almacén,
-      // la llamada a tu RecetaService iría exactamente en esta línea.
+        if (pedido.getMesa() != null) {
+          Mesa mesa = pedido.getMesa();
+          mesa.setEstado("LIBRE");
+          mesaRepository.save(mesa);
+        }
+      }
     }
 
-    pedido.setDetalles(detalles);
-    pedido.setTotal(totalBruto);
+    else {
+      pedido = Pedido.builder()
+          .nombreCliente(request.getNombreCliente() != null && !request.getNombreCliente().trim().isEmpty()
+              ? request.getNombreCliente()
+              : "Cliente General")
+          .modalidad(request.getModalidad().toUpperCase())
+          .estado("REGISTRADO")
+          .fechaRegistro(LocalDateTime.now())
+          .notasAdicionales(request.getNotasAdicionales())
+          .build();
+
+      if ("DELIVERY".equalsIgnoreCase(pedido.getModalidad())) {
+        pedido.setDireccionEntrega(request.getDireccionEntrega());
+        pedido.setReferenciaEntrega(request.getReferenciaEntrega());
+        pedido.setTelefonoContacto(request.getTelefonoContacto());
+        pedido.setCostoEnvio(0.0);
+      } else if ("LOCAL".equalsIgnoreCase(pedido.getModalidad())) {
+        if (request.getNumeroMesa() == null) {
+          throw new RuntimeException("Debe indicar el número de mesa.");
+        }
+
+        Mesa mesa = mesaRepository.findByNumero(request.getNumeroMesa())
+            .orElseThrow(() -> new RuntimeException("La mesa #" + request.getNumeroMesa() + " no existe."));
+
+        if ("OCUPADA".equals(mesa.getEstado())) {
+          throw new RuntimeException("La mesa #" + request.getNumeroMesa() + " ya está ocupada.");
+        }
+
+        mesa.setEstado("OCUPADA");
+        mesaRepository.save(mesa);
+        pedido.setMesa(mesa);
+      }
+
+      List<DetallePedido> detalles = new ArrayList<>();
+      for (PedidoRequestDTO.ItemCarritoDTO item : request.getItems()) {
+        Producto producto = productoRepository.findById(item.getProductoId())
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + item.getProductoId()));
+
+        Double subtotalItem = producto.getPrecio() * item.getCantidad();
+        totalBruto += subtotalItem;
+
+        detalles.add(DetallePedido.builder()
+            .pedido(pedido)
+            .producto(producto)
+            .cantidad(item.getCantidad())
+            .subtotal(subtotalItem)
+            .build());
+      }
+
+      pedido.setDetalles(detalles);
+      pedido.setTotal(totalBruto);
+    }
 
     Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
@@ -90,7 +118,7 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
       Venta venta = Venta.builder()
           .pedido(pedidoGuardado)
           .tipoComprobante(request.getTipoComprobante())
-          .numeroComprobante("TICKET-PENDIENTE")
+          .numeroComprobante("TICKET-000" + pedidoGuardado.getId()) // Generador temporal
           .documentoCliente(request.getDocumentoCliente())
           .metodoPago(request.getMetodoPago())
           .montoTotal(totalBruto)

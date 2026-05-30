@@ -50,7 +50,6 @@ public class DataSeeder implements CommandLineRunner {
         new String[] { "RECETAS", "Almacén" },
         new String[] { "UNIDADES", "Almacén" },
         new String[] { "DELIVERY", "Delivery" },
-        new String[] { "REPARTIDORES", "Delivery" },
         new String[] { "USUARIOS", "Seguridad" },
         new String[] { "ROLES", "Seguridad" });
 
