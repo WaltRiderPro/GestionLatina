@@ -30,7 +30,7 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
   private final ProductoRepository productoRepository;
   private final VentaRepository ventaRepository;
   private final UsuarioRepository usuarioRepository;
-  private final MesaRepository mesaRepository; 
+  private final MesaRepository mesaRepository;
 
   @Override
   @Transactional
@@ -80,7 +80,7 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
           throw new RuntimeException("Debe indicar el número de mesa.");
         }
 
-        Mesa mesa = mesaRepository.findByNumero(request.getNumeroMesa())
+        Mesa mesa = mesaRepository.findByNumeroAndEliminadoFalse(request.getNumeroMesa())
             .orElseThrow(() -> new RuntimeException("La mesa #" + request.getNumeroMesa() + " no existe."));
 
         if ("OCUPADA".equals(mesa.getEstado())) {

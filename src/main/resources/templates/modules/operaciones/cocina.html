@@ -1,118 +1,262 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <th:block th:replace="~{components/head :: head}"></th:block>
     <title th:text="${titulo}">Cocina | Pollería Latina</title>
     <style>
-        .kitchen-ticket {
-            border-top: 5px solid #ccc;
-            transition: all 0.2s ease-in-out;
+      .kitchen-ticket {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border-top: 5px solid transparent;
+      }
+      .kitchen-ticket:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+      }
+
+      .ticket-registrado {
+        border-top-color: #6c757d;
+      }
+      .ticket-preparacion {
+        border-top-color: #0d6efd;
+        animation: pulse-border 2s infinite;
+      }
+
+      @keyframes pulse-border {
+        0% {
+          box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
         }
-        .ticket-registrado { border-top-color: #6c757d; }
-        .ticket-preparacion { border-top-color: #0d6efd; animation: pulse-border 2s infinite; }
-        
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+        70% {
+          box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
         }
+        100% {
+          box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <div class="page-layout">
-        <th:block th:replace="~{components/header :: header}"></th:block>
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+  <body>
+    <div class="page-layout overflow-hidden">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
 
-        <main class="app-wrapper">
-            <div class="container-fluid">
-                
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                    <span th:text="${success}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                    <span th:text="${error}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center mb-4 mt-2 border-bottom pb-3">
-                    <div>
-                        <h1 class="h3 mb-0 fw-bold" th:text="${titulo}">Monitor de Cocina</h1>
-                        <p class="text-muted mb-0">Órdenes de salón y delivery en cola de preparación. Despache a tiempo para mantener la calidad.</p>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-outline-primary btn-sm font-w600" onclick="window.location.reload()">
-                            <i class="fa fa-sync-alt me-1"></i> Actualizar Pedidos
-                        </button>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div th:if="${#lists.isEmpty(tickets)}" class="col-12 text-center py-5 text-muted font-w500">
-                        <i class="fa fa-fire-burner mb-3 d-block" style="font-size: 60px; opacity: 0.5;"></i>
-                        No hay comandas pendientes de preparación. ¡Cocina limpia!
-                    </div>
-                    
-                    <div class="col-xl-3 col-lg-4 col-md-6 mb-4" th:each="tk : ${tickets}">
-                        <div class="card shadow-sm h-100 kitchen-ticket"
-                             th:classappend="${tk.estado == 'REGISTRADO'} ? 'ticket-registrado' : 'ticket-preparacion'">
-                            
-                            <div class="card-body p-3 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="badge" th:classappend="${tk.modalidad == 'LOCAL'} ? 'bg-primary' : 'bg-warning text-dark'" th:text="${tk.modalidad}">LOCAL</span>
-                                        <small class="text-muted fw-bold"><i class="fa fa-clock me-1"></i> Orden #<span th:text="${tk.id}"></span></small>
-                                    </div>
-
-                                    <h4 class="fw-bold mb-1" th:text="${tk.mesa != null} ? 'Mesa #' + ${tk.mesa.numero} : 'DELIVERY'">Mesa #</h4>
-                                    <p class="text-muted text-2xs mb-2">Responsable: <span class="font-w500 text-primary" th:text="${tk.nombreCliente}"></span></p>
-                                    
-                                    <div th:if="${tk.notasAdicionales != null && !tk.notasAdicionales.isEmpty()}" class="p-2 mb-3 bg-warning-subtle rounded border-start border-warning border-3">
-                                        <small class="text-dark d-block fw-semibold" style="line-height: 1.2;">
-                                            <i class="fa fa-exclamation-circle me-1"></i> <span th:text="${tk.notasAdicionales}"></span>
-                                        </small>
-                                    </div>
-
-                                    <h6 class="fw-bold text-2xs border-bottom pb-1 mb-2">ÍTEMS A PREPARAR:</h6>
-                                    <ul class="list-group list-group-flush mb-3">
-                                        <li class="list-group-item p-1 bg-transparent d-flex justify-content-between align-items-center border-0" th:each="det : ${tk.detalles}">
-                                            <div>
-                                                <span class="fw-bold text-danger fs-5 me-2" th:text="${det.cantidad} + 'x'">1x</span>
-                                                <span class="font-w600" th:text="${det.producto.nombre}">Plato</span>
-                                            </div>
-                                            <small class="text-muted font-w500" th:text="${det.producto.presentacion != null ? det.producto.presentacion.nombre : ''}"></small>
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <div class="border-top pt-2 mt-auto">
-                                    <form th:if="${tk.estado == 'REGISTRADO'}" th:action="@{/cocina/actualizar-estado}" method="POST">
-                                        <input type="hidden" name="pedidoId" th:value="${tk.id}" />
-                                        <input type="hidden" name="nuevoEstado" value="EN_PREPARACION" />
-                                        <button type="submit" class="btn btn-primary btn-sm w-100 font-w600">
-                                            <i class="fa fa-fire me-1"></i> Iniciar Preparación
-                                        </button>
-                                    </form>
-
-                                    <form th:if="${tk.estado == 'EN_PREPARACION'}" th:action="@{/cocina/actualizar-estado}" method="POST">
-                                        <input type="hidden" name="pedidoId" th:value="${tk.id}" />
-                                        <input type="hidden" name="nuevoEstado" value="LISTO" />
-                                        <button type="submit" class="btn btn-success btn-sm w-100 text-white font-w600">
-                                            <i class="fa fa-check-circle me-1"></i> Terminar / Despachar
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
+      <main class="app-wrapper p-3 p-lg-4">
+        <div class="container-fluid p-0">
+          <div
+            th:if="${success}"
+            class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4"
+            role="alert"
+          >
+            <div class="d-flex align-items-center">
+              <i class="fi fi-rr-check-circle me-2 fs-5"></i>
+              <span
+                class="fw-medium font-monospace fs-7"
+                th:text="${success}"
+              ></span>
             </div>
-        </main>
-        <th:block th:replace="~{components/footer :: footer}"></th:block>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4"
+            role="alert"
+          >
+            <div class="d-flex align-items-center">
+              <i class="fi fi-rr-triangle-warning me-2 fs-5"></i>
+              <span
+                class="fw-medium font-monospace fs-7"
+                th:text="${error}"
+              ></span>
+            </div>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div
+            class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4"
+          >
+            <div>
+              <h1
+                class="h4 mb-1 fw-bold text-uppercase tracking-wider d-flex align-items-center gap-2"
+              >
+                <i class="fi fi-rr-hat-chef"></i>
+                <span th:text="${titulo}">Monitor de Cocina</span>
+              </h1>
+              <p class="text-muted mb-0 font-monospace fs-7">
+                Órdenes en cola de preparación. Despache a tiempo para mantener
+                la calidad.
+              </p>
+            </div>
+            <div>
+              <button
+                type="button"
+                class="btn btn-light shadow-sm border px-3 py-2 font-monospace fs-7 tracking-wide fw-bold rounded-3 d-flex align-items-center gap-2"
+                onclick="window.location.reload()"
+              >
+                <i class="fi fi-rr-refresh"></i> Actualizar Cola
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div
+              th:if="${#lists.isEmpty(tickets)}"
+              class="col-12 text-center py-5 text-muted"
+            >
+              <div class="bg-light rounded-circle d-inline-flex p-4 mb-3">
+                <i class="fi fi-rr-flame display-6 opacity-50"></i>
+              </div>
+              <br />
+              <span
+                class="fw-medium font-monospace fs-7 text-uppercase tracking-wide"
+              >
+                No hay comandas pendientes de preparación.<br />¡Cocina limpia!
+              </span>
+            </div>
+
+            <div class="col-xl-3 col-lg-4 col-md-6" th:each="tk : ${tickets}">
+              <div
+                class="card shadow-sm border-0 rounded-4 h-100 kitchen-ticket"
+                th:classappend="${tk.estado == 'REGISTRADO'} ? 'ticket-registrado' : 'ticket-preparacion'"
+              >
+                <div
+                  class="card-body p-4 d-flex flex-column justify-content-between"
+                >
+                  <div>
+                    <div
+                      class="d-flex justify-content-between align-items-center mb-3"
+                    >
+                      <span
+                        class="badge font-monospace fs-8 px-2 py-1.5 rounded-2 shadow-sm border"
+                        th:classappend="${tk.modalidad == 'LOCAL'} ? 'bg-primary-subtle text-primary border-primary border-opacity-25' : 'bg-warning-subtle text-warning border-warning border-opacity-25'"
+                        th:text="${tk.modalidad}"
+                        >LOCAL</span
+                      >
+                      <small class="text-muted font-monospace fs-8 fw-bold"
+                        >Orden #<span th:text="${tk.id}"></span
+                      ></small>
+                    </div>
+
+                    <h4
+                      class="fw-bold mb-1 tracking-wider text-dark"
+                      th:text="${tk.mesa != null} ? 'MESA ' + ${tk.mesa.numero} : 'DELIVERY'"
+                    >
+                      Mesa #
+                    </h4>
+                    <p class="text-muted font-monospace fs-8 mb-3">
+                      Resp:
+                      <span
+                        class="fw-bold text-dark"
+                        th:text="${tk.nombreCliente}"
+                      ></span>
+                    </p>
+
+                    <div
+                      th:if="${tk.notasAdicionales != null && !tk.notasAdicionales.isEmpty()}"
+                      class="p-2 mb-3 bg-danger bg-opacity-10 rounded-3 border-start border-danger border-3"
+                    >
+                      <small
+                        class="text-danger d-block font-monospace fw-bold fs-8 lh-sm"
+                      >
+                        <i class="fi fi-rr-comment-alt me-1"></i>
+                        <span th:text="${tk.notasAdicionales}"></span>
+                      </small>
+                    </div>
+
+                    <h6
+                      class="fw-bold text-uppercase tracking-wider fs-8 border-bottom pb-2 mb-2 text-muted"
+                    >
+                      <i class="fi fi-rr-list-check me-1"></i> Ítems a Preparar:
+                    </h6>
+
+                    <ul
+                      class="list-group list-group-flush mb-4 font-monospace fs-7"
+                    >
+                      <li
+                        class="list-group-item px-0 py-2 bg-transparent d-flex justify-content-between align-items-start border-0"
+                        th:each="det : ${tk.detalles}"
+                      >
+                        <div>
+                          <span
+                            class="fw-bold text-danger fs-6 me-2"
+                            th:text="${det.cantidad} + 'x'"
+                            >1x</span
+                          >
+                          <span
+                            class="fw-bold text-dark"
+                            th:text="${det.producto.nombre}"
+                            >Plato</span
+                          >
+                          <small
+                            class="text-muted d-block mt-1 lh-1"
+                            style="font-size: 0.65rem"
+                            th:text="${det.producto.presentacion != null ? det.producto.presentacion.nombre : ''}"
+                          ></small>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="border-top pt-3 mt-auto">
+                    <form
+                      th:if="${tk.estado == 'REGISTRADO'}"
+                      th:action="@{/cocina/actualizar-estado}"
+                      method="POST"
+                    >
+                      <input
+                        type="hidden"
+                        name="pedidoId"
+                        th:value="${tk.id}"
+                      />
+                      <input
+                        type="hidden"
+                        name="nuevoEstado"
+                        value="EN_PREPARACION"
+                      />
+                      <button
+                        type="submit"
+                        class="btn btn-dark w-100 fw-bold font-monospace fs-7 text-uppercase tracking-wide py-2.5 rounded-3 d-flex justify-content-center align-items-center gap-2 shadow-sm"
+                      >
+                        <i class="fi fi-rr-flame text-warning"></i> Empezar a
+                        Cocinar
+                      </button>
+                    </form>
+
+                    <form
+                      th:if="${tk.estado == 'EN_PREPARACION'}"
+                      th:action="@{/cocina/actualizar-estado}"
+                      method="POST"
+                    >
+                      <input
+                        type="hidden"
+                        name="pedidoId"
+                        th:value="${tk.id}"
+                      />
+                      <input type="hidden" name="nuevoEstado" value="LISTO" />
+                      <button
+                        type="submit"
+                        class="btn btn-primary w-100 fw-bold font-monospace fs-7 text-uppercase tracking-wide py-2.5 rounded-3 d-flex justify-content-center align-items-center gap-2 shadow-sm"
+                      >
+                        <i class="fi fi-rr-bell-concierge"></i> ¡Plato Listo!
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
-</body>
+  </body>
 </html>

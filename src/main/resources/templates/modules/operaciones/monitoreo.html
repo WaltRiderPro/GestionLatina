@@ -112,8 +112,8 @@
 
           <div class="mb-5">
             <div class="d-flex align-items-center gap-2 mb-3 px-2">
-              <span class="badge rounded-circle p-1"
-                ><i class="fi fi-rr-restaurant"></i
+              <span class="badge bg-danger rounded-circle p-1"
+                ><i class="fi fi-rr-restaurant text-white"></i
               ></span>
               <h5 class="fw-bold text-uppercase tracking-wider mb-0">
                 Atención en Salón (Local)
@@ -249,31 +249,58 @@
                       <div
                         class="card monitor-card border-normal border-1 shadow-none bg-light bg-opacity-50"
                       >
-                        <div
-                          class="card-body p-2 d-flex justify-content-between align-items-center"
-                        >
-                          <div>
-                            <span
-                              class="fw-bold fs-7 d-block"
-                              th:text="${p.nombreCliente}"
-                              >Cliente</span
-                            >
-                            <small class="text-muted font-monospace fs-8"
-                              >#[[${p.id}]] - [[${p.detalles.size()}]]
-                              Ítems</small
-                            >
+                        <div class="card-body p-3">
+                          <div
+                            class="d-flex justify-content-between align-items-start mb-2"
+                          >
+                            <div>
+                              <span
+                                class="fw-bold fs-7 d-block"
+                                th:text="${p.nombreCliente}"
+                                >Cliente</span
+                              >
+                              <small class="text-muted font-monospace fs-8"
+                                >#[[${p.id}]] - [[${p.detalles.size()}]]
+                                Ítems</small
+                              >
+                            </div>
+                            <div class="text-end">
+                              <span
+                                class="bg-opacity-10 border timer-badge fs-7 timer-display d-block mb-1"
+                                >00:00</span
+                              >
+                              <span
+                                class="badge bg-secondary-subtle border font-monospace"
+                                style="font-size: 0.6rem"
+                                th:text="${p.estado}"
+                                >ESTADO</span
+                              >
+                            </div>
                           </div>
-                          <div class="text-end">
-                            <span
-                              class="bg-opacity-10 border timer-badge fs-7 timer-display d-block mb-1"
-                              >00:00</span
+                          <div class="border-top pt-2 mt-2">
+                            <form
+                              th:action="@{/pedidos/marcar-entregado}"
+                              method="POST"
+                              class="m-0"
                             >
-                            <span
-                              class="badge bg-secondary-subtle border font-monospace"
-                              style="font-size: 0.6rem"
-                              th:text="${p.estado}"
-                              >ESTADO</span
-                            >
+                              <input
+                                type="hidden"
+                                name="pedidoId"
+                                th:value="${p.id}"
+                              />
+                              <button
+                                type="submit"
+                                class="btn btn-success btn-sm w-100 font-monospace fs-8 tracking-wider py-1 d-flex justify-content-center align-items-center gap-1 shadow-sm"
+                                onclick="
+                                  return confirm(
+                                    '¿Confirmas que el cliente ya recogió su pedido en mostrador?',
+                                  );
+                                "
+                              >
+                                <i class="fi fi-rr-box-check"></i> ENTREGAR
+                                PEDIDO
+                              </button>
+                            </form>
                           </div>
                         </div>
                       </div>
@@ -343,7 +370,7 @@
                           </div>
                           <div class="text-end">
                             <span
-                              class="badge bg-opacity-10 border timer-badge fs-7 timer-display d-block mb-1"
+                              class="bg-opacity-10 border timer-badge fs-7 timer-display d-block mb-1"
                               >00:00</span
                             >
                             <span
@@ -383,7 +410,6 @@
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
 
     <script>
-      // Almacena los IDs de los pedidos que ya lanzaron alerta para no spamear la pantalla
       let alertasLanzadas = new Set();
 
       document.addEventListener("DOMContentLoaded", function () {
@@ -391,9 +417,8 @@
         actualizarCronometros();
 
         setInterval(actualizarRelojGlobal, 1000);
-        setInterval(actualizarCronometros, 1000); // Actualiza los relojes de las tarjetas cada 1s para que se vea fluído
+        setInterval(actualizarCronometros, 1000);
 
-        // Auto-refresh de la página entera cada 60 segundos para traer pedidos nuevos
         setInterval(() => {
           location.reload();
         }, 60000);
@@ -417,11 +442,10 @@
         tarjetas.forEach((tarjeta) => {
           const stringFecha = tarjeta.getAttribute("data-fecha");
           const pedidoId = tarjeta.getAttribute("data-id");
-          const identificador = tarjeta.getAttribute("data-identificador"); // Ej: "Mesa 5" o "Delivery #12"
+          const identificador = tarjeta.getAttribute("data-identificador");
 
           if (!stringFecha) return;
 
-          // Convertir la fecha ISO que viene del backend de forma segura
           const horaRegistro = new Date(stringFecha);
           const diferenciaMs = ahora - horaRegistro;
 
@@ -440,34 +464,24 @@
           if (display) {
             display.innerText = `${strMinutos}:${strSegundos}`;
 
-            // ===============================================
-            // LÓGICA COMERCIAL DE ALARMAS (Tiempos de Cocina)
-            // ===============================================
-
-            // ZONA ROJA: Más de 15 Minutos (Fuego)
             if (minutos >= 15) {
               display.className =
-                "badge   border border-danger timer-badge fs-6 timer-display pulse-alert";
+                "badge border border-danger timer-badge fs-6 timer-display pulse-alert text-danger";
               cardBorder.classList.remove("border-normal", "border-warning");
               cardBorder.classList.add("border-danger");
 
-              // Disparar Alerta (Toast) solo una vez por pedido
               if (!alertasLanzadas.has(pedidoId)) {
                 lanzarAlertaRoja(
                   `¡ATENCIÓN! El pedido de ${identificador} lleva ${minutos} minutos esperando. ¡Acelerar despacho!`,
                 );
                 alertasLanzadas.add(pedidoId);
               }
-            }
-            // ZONA AMARILLA: Más de 10 Minutos (Retraso)
-            else if (minutos >= 10) {
+            } else if (minutos >= 10) {
               display.className =
-                "badge bg-warning  border border-warning timer-badge fs-6 timer-display";
+                "badge border border-warning timer-badge fs-6 timer-display text-warning";
               cardBorder.classList.remove("border-normal", "border-danger");
               cardBorder.classList.add("border-warning");
-            }
-            // ZONA ÓPTIMA: Menos de 10 minutos
-            else {
+            } else {
               display.className =
                 "badge bg-info bg-opacity-10 text-info border border-info timer-badge fs-6 timer-display";
             }
@@ -475,18 +489,17 @@
         });
       }
 
-      // Función para construir y mostrar el Toast dinámico
       function lanzarAlertaRoja(mensaje) {
         const container = document.getElementById("toastContainer");
 
         const idToast = "toast-" + Math.random().toString(36).substr(2, 9);
         const toastHTML = `
-          <div id="${idToast}" class="toast align-items-center   border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+          <div id="${idToast}" class="toast align-items-center border border-danger shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex p-1">
-              <div class="toast-body fw-bold font-monospace fs-7 d-flex align-items-center gap-2">
+              <div class="toast-body fw-bold font-monospace fs-7 d-flex align-items-center gap-2 text-danger">
                 <i class="fi fi-rr-flame fs-5"></i> ${mensaje}
               </div>
-              <button type="button" class="btn-close btn-close-white me-2 m-auto shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
+              <button type="button" class="btn-close me-2 m-auto shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
           </div>
         `;
@@ -494,13 +507,8 @@
         container.insertAdjacentHTML("beforeend", toastHTML);
 
         const toastEl = document.getElementById(idToast);
-        const toast = new bootstrap.Toast(toastEl, { delay: 10000 }); // Se queda 10 segundos
+        const toast = new bootstrap.Toast(toastEl, { delay: 10000 });
         toast.show();
-
-        // Opcional: Reproducir un sonido de campana leve si el navegador lo permite
-        try {
-          // const audio = new Audio('/sounds/bell.mp3'); audio.play();
-        } catch (e) {}
       }
     </script>
   </body>

@@ -11,6 +11,6 @@ public interface MesaRepository extends JpaRepository<Mesa, Long> {
 
   List<Mesa> findByActivoTrueAndEliminadoFalseOrderByNumeroAsc();
 
-  Optional<Mesa> findByNumero(Integer numero);
+  Optional<Mesa> findByNumeroAndEliminadoFalse(Integer numero);
 
 }

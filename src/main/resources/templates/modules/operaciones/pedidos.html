@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Historial de Pedidos | Pollería Latina</title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+
+      .table-hover tbody tr {
+        transition: background-color 0.2s;
+      }
+      .modal-ticket-panel {
+        border-radius: 0.75rem;
+        border: 1px dashed var(--bs-border-color);
+      }
+
+      /* Animación suave para el filtrado */
+      .pedido-row {
+        transition: opacity 0.3s ease;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout overflow-hidden">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper p-3 p-lg-4">
+        <div class="container-fluid p-0">
+          <div
+            class="d-flex flex-wrap gap-3 align-items-center justify-content-between mb-4"
+          >
+            <div>
+              <h4
+                class="fw-bold text-uppercase tracking-wider mb-1 d-flex align-items-center gap-2"
+              >
+                <i class="fi fi-rr-folder-open"></i> Historial de Operaciones
+              </h4>
+              <p class="text-muted small font-monospace mb-0">
+                Registro histórico de todas las comandas, locales y externas.
+              </p>
+            </div>
+            <div>
+              <span
+                class="badge bg-secondary bg-opacity-10 text-secondary border font-monospace px-3 py-2 fs-7 shadow-sm d-flex align-items-center gap-2"
+              >
+                <i class="fi fi-rr-database"></i
+                ><span
+                  id="badgeContador"
+                  th:text="${#lists.size(pedidos)} + ' Registros'"
+                  >0 Registros</span
+                >
+              </span>
+            </div>
+          </div>
+
+          <div
+            class="card border-0 shadow-sm rounded-4 mb-4 bg-light bg-opacity-10 border border-secondary border-opacity-10"
+          >
+            <div class="card-body p-3">
+              <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                  <div class="input-group shadow-sm rounded-3">
+                    <span
+                      class="input-group-text bg-transparent border-end-0 text-muted"
+                      ><i class="fi fi-rr-search"></i
+                    ></span>
+                    <input
+                      type="text"
+                      id="filtroTexto"
+                      class="form-control border-start-0 shadow-none font-monospace fs-7 bg-transparent"
+                      placeholder="Buscar por Orden # o Cliente..."
+                      oninput="filtrarHistorial()"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <select
+                    id="filtroModalidad"
+                    class="form-select shadow-sm shadow-none border font-monospace fs-7 bg-transparent cursor-pointer"
+                    onchange="filtrarHistorial()"
+                  >
+                    <option value="TODAS" selected>
+                      Todas las Modalidades
+                    </option>
+                    <option value="LOCAL">Atención en Salón (Mesas)</option>
+                    <option value="LLEVAR">Para Llevar (Mostrador)</option>
+                    <option value="DELIVERY">Delivery (Domicilio)</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select
+                    id="filtroEstado"
+                    class="form-select shadow-sm shadow-none border font-monospace fs-7 bg-transparent cursor-pointer"
+                    onchange="filtrarHistorial()"
+                  >
+                    <option value="TODOS" selected>Todos los Estados</option>
+                    <option value="PAGADO,ENTREGADO">
+                      Completados (Cerrados)
+                    </option>
+                    <option value="REGISTRADO,EN_PREPARACION,LISTO">
+                      En Proceso (Abiertos)
+                    </option>
+                    <option value="ANULADO">Anulados (Cancelados)</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <button
+                    class="btn btn-dark w-100 fw-bold font-monospace fs-7 tracking-wider rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2"
+                    onclick="limpiarFiltros()"
+                  >
+                    <i class="fi fi-rr-refresh"></i> Limpiar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+              <div
+                class="table-responsive"
+                style="max-height: 600px; overflow-y: auto"
+              >
+                <table class="table table-hover align-middle mb-0">
+                  <thead
+                    class="text-uppercase fs-8 tracking-wider text-muted font-monospace position-sticky top-0 bg-light bg-opacity-75"
+                    style="backdrop-filter: blur(5px); z-index: 2"
+                  >
+                    <tr>
+                      <th class="py-3 px-4 border-0">Nº Orden</th>
+                      <th class="py-3 border-0">Fecha y Hora</th>
+                      <th class="py-3 border-0 text-center">Modalidad</th>
+                      <th class="py-3 border-0">Referencia / Cliente</th>
+                      <th class="py-3 border-0 text-center">Estado</th>
+                      <th class="py-3 border-0 text-end">Total</th>
+                      <th class="py-3 px-4 border-0 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaPedidosBody">
+                    <tr
+                      th:each="p : ${pedidos}"
+                      class="pedido-row"
+                      th:data-id="${p.id}"
+                      th:data-cliente="${#strings.toLowerCase(p.nombreCliente)}"
+                      th:data-modalidad="${p.modalidad}"
+                      th:data-estado="${p.estado}"
+                    >
+                      <td
+                        class="py-3 px-4 fw-bold font-monospace fs-7"
+                        th:text="'#' + ${p.id}"
+                      >
+                        #1
+                      </td>
+                      <td
+                        class="py-3 font-monospace fs-7 text-secondary"
+                        th:text="${#temporals.format(p.fechaRegistro, 'dd/MM/yyyy hh:mm a')}"
+                      >
+                        00/00/0000
+                      </td>
+
+                      <td class="py-3 text-center">
+                        <span
+                          th:if="${p.modalidad == 'LOCAL'}"
+                          class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 font-monospace px-2 py-1 fs-8 rounded-2"
+                          ><i class="fi fi-rr-restaurant me-1"></i>LOCAL</span
+                        >
+                        <span
+                          th:if="${p.modalidad == 'LLEVAR'}"
+                          class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-monospace px-2 py-1 fs-8 rounded-2"
+                          ><i class="fi fi-rr-shopping-bag me-1"></i
+                          >LLEVAR</span
+                        >
+                        <span
+                          th:if="${p.modalidad == 'DELIVERY'}"
+                          class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 font-monospace px-2 py-1 fs-8 rounded-2"
+                          ><i class="fi fi-rr-motorcycle me-1"></i
+                          >DELIVERY</span
+                        >
+                      </td>
+
+                      <td class="py-3">
+                        <span
+                          class="d-block fw-semibold fs-7 text-truncate"
+                          style="max-width: 200px"
+                          th:text="${p.nombreCliente}"
+                          >Cliente</span
+                        >
+                        <small
+                          th:if="${p.mesa != null}"
+                          class="text-muted font-monospace fs-8"
+                          >Mesa <span th:text="${p.mesa.numero}"></span
+                        ></small>
+                      </td>
+
+                      <td class="py-3 text-center">
+                        <span
+                          th:classappend="${(p.estado == 'PAGADO' or p.estado == 'ENTREGADO') ? 'bg-success text-white' : (p.estado == 'ANULADO' ? 'bg-danger text-white' : 'bg-secondary bg-opacity-10 text-secondary border')}"
+                          class="badge font-monospace fs-8 tracking-wider px-2 py-1 rounded-2 shadow-sm"
+                          th:text="${p.estado}"
+                        >
+                          ESTADO
+                        </span>
+                      </td>
+
+                      <td
+                        class="py-3 text-end fw-bold font-monospace fs-6"
+                        th:text="'S/ ' + ${#numbers.formatDecimal(p.total, 1, 'POINT', 2, 'COMMA')}"
+                      >
+                        S/ 0.00
+                      </td>
+
+                      <td class="py-3 px-4 text-center">
+                        <button
+                          class="btn btn-sm btn-outline-secondary font-monospace fw-semibold fs-8 tracking-wide py-1.5 px-3 rounded-2 shadow-sm"
+                          th:data-id="${p.id}"
+                          onclick="
+                            abrirDetallePedido(this.getAttribute('data-id'))
+                          "
+                        >
+                          <i class="fi fi-rr-eye me-1 align-middle"></i> VER
+                        </button>
+                      </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(pedidos)}">
+                      <td colspan="7" class="text-center py-5 text-muted">
+                        <i
+                          class="fi fi-rr-folder-open display-6 opacity-25 d-block mb-3"
+                        ></i>
+                        <span
+                          class="font-monospace fs-7 text-uppercase tracking-wider"
+                          >No hay registros de pedidos en la base de
+                          datos.</span
+                        >
+                      </td>
+                    </tr>
+
+                    <tr id="emptyFilterState" class="d-none">
+                      <td colspan="7" class="text-center py-5 text-muted">
+                        <i
+                          class="fi fi-rr-search-alt display-6 opacity-25 d-block mb-3"
+                        ></i>
+                        <span
+                          class="font-monospace fs-7 text-uppercase tracking-wider"
+                          >Ningún pedido coincide con tu búsqueda.</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div
+      class="modal fade"
+      id="modalDetallePedido"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div
+            class="p-4 border-bottom position-relative bg-light bg-opacity-10"
+          >
+            <button
+              type="button"
+              class="btn-close position-absolute top-0 end-0 m-4 shadow-none"
+              data-bs-dismiss="modal"
+            ></button>
+            <div class="d-flex align-items-center gap-3">
+              <div
+                class="bg-primary text-white rounded-circle p-3 shadow-sm d-flex align-items-center justify-content-center"
+                style="width: 50px; height: 50px"
+              >
+                <i class="fi fi-rr-receipt fs-5"></i>
+              </div>
+              <div>
+                <h5
+                  class="fw-bold text-uppercase tracking-wider mb-1 fs-5"
+                  id="ticketOrdenId"
+                >
+                  Orden #--
+                </h5>
+                <p class="text-muted font-monospace fs-8 mb-0" id="ticketFecha">
+                  --/--/---- --:--
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-body p-4">
+            <div class="modal-ticket-panel p-3 mb-4 bg-light bg-opacity-50">
+              <div class="row g-3">
+                <div class="col-6 border-end">
+                  <span
+                    class="text-muted text-uppercase fw-bold fs-8 d-block mb-1"
+                    >Cliente / Destino</span
+                  >
+                  <span class="fw-bold fs-7" id="ticketCliente">--</span>
+                </div>
+                <div class="col-6">
+                  <span
+                    class="text-muted text-uppercase fw-bold fs-8 d-block mb-1"
+                    >Estado Operativo</span
+                  >
+                  <span
+                    class="badge font-monospace fs-8 px-2 py-1 rounded-2 shadow-sm"
+                    id="ticketEstado"
+                    >--</span
+                  >
+                </div>
+              </div>
+              <div
+                class="row mt-2 pt-2 border-top g-3 d-none"
+                id="contenedorNotas"
+              >
+                <div class="col-12">
+                  <span
+                    class="text-muted text-uppercase fw-bold fs-8 d-block mb-1"
+                    >Notas / Observaciones</span
+                  >
+                  <span class="fs-7 fst-italic text-secondary" id="ticketNotas"
+                    >--</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <h6 class="fw-bold text-uppercase tracking-wider mb-3 fs-8">
+              <i class="fi fi-rr-list text-muted me-1"></i> Desglose de Consumo
+            </h6>
+            <div
+              class="table-responsive border rounded-3 overflow-hidden shadow-sm mb-0"
+            >
+              <table class="table table-hover table-sm mb-0 align-middle">
+                <thead
+                  class="bg-light bg-opacity-50 text-uppercase fs-8 tracking-wider font-monospace text-muted"
+                >
+                  <tr>
+                    <th class="py-2 px-3 border-0">Ítem</th>
+                    <th class="py-2 text-center border-0">Cant.</th>
+                    <th class="py-2 px-3 text-end border-0">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody id="ticketItems" class="font-monospace fs-7"></tbody>
+                <tfoot class="border-top">
+                  <tr>
+                    <td
+                      colspan="2"
+                      class="text-end py-3 fw-bold text-uppercase tracking-wider fs-7"
+                    >
+                      Monto Total:
+                    </td>
+                    <td
+                      class="text-end py-3 px-3 fw-bold fs-5 text-primary"
+                      id="ticketTotal"
+                    >
+                      S/ 0.00
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light bg-opacity-10 p-3 border-top">
+            <button
+              type="button"
+              class="btn btn-secondary px-4 fw-bold font-monospace fs-7 text-uppercase tracking-wide rounded-3 w-100"
+              data-bs-dismiss="modal"
+            >
+              Cerrar Ticket
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      // 1. Lógica del Filtro en Vivo
+      function filtrarHistorial() {
+        const textoBuscar = document
+          .getElementById("filtroTexto")
+          .value.toLowerCase()
+          .trim();
+        const modalidadSelect =
+          document.getElementById("filtroModalidad").value;
+        const estadoSelect = document.getElementById("filtroEstado").value;
+
+        let countVisibles = 0;
+        const filas = document.querySelectorAll(".pedido-row");
+        const emptyState = document.getElementById("emptyFilterState");
+
+        filas.forEach((fila) => {
+          const id = fila.getAttribute("data-id");
+          const cliente = fila.getAttribute("data-cliente");
+          const mod = fila.getAttribute("data-modalidad");
+          const est = fila.getAttribute("data-estado");
+
+          // Validar Coincidencias
+          const matchTexto =
+            id.includes(textoBuscar) || cliente.includes(textoBuscar);
+          const matchMod =
+            modalidadSelect === "TODAS" || mod === modalidadSelect;
+          const matchEst =
+            estadoSelect === "TODOS" || estadoSelect.includes(est);
+
+          if (matchTexto && matchMod && matchEst) {
+            fila.style.display = ""; // Mostrar
+            countVisibles++;
+          } else {
+            fila.style.display = "none"; // Ocultar
+          }
+        });
+
+        // Actualizar el contador de la placa superior
+        document.getElementById("badgeContador").innerHTML =
+          `${countVisibles} Registros`;
+
+        // Mostrar u Ocultar el mensaje de "No hay resultados"
+        if (countVisibles === 0 && filas.length > 0) {
+          emptyState.classList.remove("d-none");
+        } else {
+          emptyState.classList.add("d-none");
+        }
+      }
+
+      function limpiarFiltros() {
+        document.getElementById("filtroTexto").value = "";
+        document.getElementById("filtroModalidad").value = "TODAS";
+        document.getElementById("filtroEstado").value = "TODOS";
+        filtrarHistorial(); // Refrescar la tabla al instante
+      }
+
+      // 2. Lógica del Modal (Ticket Asíncrono)
+      function abrirDetallePedido(idPedido) {
+        fetch("/pedidos/api/" + idPedido)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "error") {
+              alert(data.message);
+              return;
+            }
+
+            document.getElementById("ticketOrdenId").innerText =
+              "Orden #" + data.id;
+
+            const fechaObj = new Date(data.fecha);
+            const strFecha = isNaN(fechaObj)
+              ? data.fecha
+              : fechaObj.toLocaleString("es-PE", { hour12: true });
+            document.getElementById("ticketFecha").innerText = strFecha;
+
+            document.getElementById("ticketCliente").innerText = data.cliente;
+
+            const badgeEstado = document.getElementById("ticketEstado");
+            badgeEstado.innerText = data.estado;
+            badgeEstado.className =
+              "badge font-monospace fs-8 px-2 py-1 rounded-2 shadow-sm ";
+            if (data.estado === "PAGADO" || data.estado === "ENTREGADO")
+              badgeEstado.classList.add("bg-success", "text-white");
+            else if (data.estado === "ANULADO")
+              badgeEstado.classList.add("bg-danger", "text-white");
+            else
+              badgeEstado.classList.add(
+                "bg-secondary",
+                "bg-opacity-10",
+                "text-secondary",
+                "border",
+              );
+
+            const contenedorNotas = document.getElementById("contenedorNotas");
+            if (data.notas && data.notas.trim() !== "") {
+              document.getElementById("ticketNotas").innerText = data.notas;
+              contenedorNotas.classList.remove("d-none");
+            } else {
+              contenedorNotas.classList.add("d-none");
+            }
+
+            document.getElementById("ticketTotal").innerText =
+              "S/ " + parseFloat(data.total).toFixed(2);
+
+            const tbody = document.getElementById("ticketItems");
+            tbody.innerHTML = "";
+
+            data.items.forEach((item) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td class="px-3 py-2 fw-bold text-truncate" style="max-width: 150px;">${item.producto}</td>
+                <td class="text-center py-2 fw-bold">x${item.cantidad}</td>
+                <td class="px-3 text-end py-2 fw-bold">S/ ${parseFloat(item.subtotal).toFixed(2)}</td>
+              `;
+              tbody.appendChild(tr);
+            });
+
+            const modal = new bootstrap.Modal(
+              document.getElementById("modalDetallePedido"),
+            );
+            modal.show();
+          })
+          .catch((error) => console.error("Error obteniendo detalles:", error));
+      }
+    </script>
+  </body>
+</html>

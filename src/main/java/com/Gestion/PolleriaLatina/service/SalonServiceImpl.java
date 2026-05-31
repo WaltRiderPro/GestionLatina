@@ -10,15 +10,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.Gestion.PolleriaLatina.model.DetallePedido;
 import com.Gestion.PolleriaLatina.model.Insumo;
+import com.Gestion.PolleriaLatina.model.KardexMovimiento;
 import com.Gestion.PolleriaLatina.model.Mesa;
 import com.Gestion.PolleriaLatina.model.Pedido;
 import com.Gestion.PolleriaLatina.model.Producto;
 import com.Gestion.PolleriaLatina.model.Receta;
+import com.Gestion.PolleriaLatina.model.Usuario;
+import com.Gestion.PolleriaLatina.model.enumerados.TipoMovimiento;
 import com.Gestion.PolleriaLatina.repository.InsumoRepository;
+import com.Gestion.PolleriaLatina.repository.KardexMovimientoRepository;
 import com.Gestion.PolleriaLatina.repository.MesaRepository;
 import com.Gestion.PolleriaLatina.repository.PedidoRepository;
 import com.Gestion.PolleriaLatina.repository.ProductoRepository;
 import com.Gestion.PolleriaLatina.repository.RecetaRepository;
+import com.Gestion.PolleriaLatina.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +36,8 @@ public class SalonServiceImpl implements SalonService {
   private final ProductoRepository productoRepository;
   private final RecetaRepository recetaRepository;
   private final InsumoRepository insumoRepository;
+  private final UsuarioRepository usuarioRepository;
+  private final KardexMovimientoRepository kardexMovimientoRepository;
 
   @Override
   @Transactional(readOnly = true)
@@ -230,7 +237,6 @@ public class SalonServiceImpl implements SalonService {
     pedido.setFechaCompletado(LocalDateTime.now());
     pedido.setNotasAdicionales(pedido.getNotasAdicionales() + " | Pago: " + metodoPago);
 
-    // Liberamos la mesa física del salón
     if (pedido.getMesa() != null) {
       Mesa mesa = pedido.getMesa();
       mesa.setEstado("LIBRE");
@@ -241,6 +247,11 @@ public class SalonServiceImpl implements SalonService {
   }
 
   private void descontarInsumosDelAlmacen(Pedido pedido) {
+    // Obtenemos el usuario logueado en el sistema actualmente (el cocinero)
+    String usernameActual = org.springframework.security.core.context.SecurityContextHolder.getContext()
+        .getAuthentication().getName();
+    Usuario usuarioCocina = usuarioRepository.findByUsername(usernameActual).orElse(null);
+
     for (DetallePedido detalle : pedido.getDetalles()) {
       Long productoId = detalle.getProducto().getId();
       Integer cantidadVendida = detalle.getCantidad();
@@ -256,11 +267,22 @@ public class SalonServiceImpl implements SalonService {
         insumo.setStockActual(nuevoStock);
 
         if (nuevoStock < insumo.getStockMinimo()) {
-          System.out.println("🚨 ALERTA DE STOCK CRÍTICO: El insumo [" + insumo.getNombre()
-              + "] está por debajo del mínimo permitido.");
+          System.out.println("🚨 ALERTA: Insumo [" + insumo.getNombre() + "] bajo mínimo.");
         }
 
-        insumoRepository.save(insumo);
+        if (usuarioCocina != null) {
+          KardexMovimiento mov = KardexMovimiento.builder()
+              .insumo(insumo)
+              .tipoMovimiento(TipoMovimiento.SALIDA)
+              .cantidad(cantidadGastada)
+              .stockResultante(nuevoStock)
+              .origen("Comanda #" + pedido.getId())
+              .observacion("Preparación de " + cantidadVendida + "x " + detalle.getProducto().getNombre())
+              .usuario(usuarioCocina)
+              .build();
+
+          kardexMovimientoRepository.save(mov);
+        }
       }
     }
   }
@@ -277,9 +299,17 @@ public class SalonServiceImpl implements SalonService {
     Pedido pedido = pedidoRepository.findById(pedidoId)
         .orElseThrow(() -> new RuntimeException("El ticket de cocina consultado no existe."));
 
-    if ("EN_PREPARACION".equals(nuevoEstado) || "LISTO".equals(nuevoEstado)) {
+    if ("EN_PREPARACION".equals(nuevoEstado)) {
+      if ("REGISTRADO".equals(pedido.getEstado())) {
+        this.descontarInsumosDelAlmacen(pedido);
+      }
       pedido.setEstado(nuevoEstado);
       pedidoRepository.save(pedido);
+
+    } else if ("LISTO".equals(nuevoEstado)) {
+      pedido.setEstado(nuevoEstado);
+      pedidoRepository.save(pedido);
+
     } else {
       throw new RuntimeException("Estado de cocina no válido.");
     }

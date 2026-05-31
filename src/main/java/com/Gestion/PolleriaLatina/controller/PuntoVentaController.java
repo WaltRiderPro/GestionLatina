@@ -2,7 +2,6 @@ package com.Gestion.PolleriaLatina.controller;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -79,15 +78,18 @@ public class PuntoVentaController {
   @ResponseBody
   public ResponseEntity<?> buscarCuentaMesa(@PathVariable Integer numeroMesa) {
     try {
-      Optional<Pedido> pedidoOpt = pedidoRepository.findPedidoActivoByMesa(numeroMesa);
+      // Usamos la consulta que devuelve una Lista para evadir el
+      // NonUniqueResultException
+      List<Pedido> pedidos = pedidoRepository.findActiveOrderByMesaNumero(numeroMesa);
 
-      if (pedidoOpt.isEmpty()) {
+      if (pedidos.isEmpty()) {
         return ResponseEntity.badRequest().body(Map.of(
             "status", "error",
             "message", "No hay ninguna orden activa para la mesa #" + numeroMesa));
       }
 
-      Pedido pedido = pedidoOpt.get();
+      Pedido pedido = pedidos.get(0);
+
       List<Map<String, Object>> items = pedido.getDetalles().stream().map(d -> {
         Map<String, Object> itemMap = new java.util.HashMap<>();
         itemMap.put("productoId", d.getProducto().getId());
@@ -98,7 +100,6 @@ public class PuntoVentaController {
         return itemMap;
       }).collect(Collectors.toList());
 
-      // Devolvemos los datos listos para que el JavaScript reconstruya el carrito
       return ResponseEntity.ok(Map.of(
           "status", "success",
           "pedidoId", pedido.getId(),

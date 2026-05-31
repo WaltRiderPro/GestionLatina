@@ -80,4 +80,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
       "ORDER BY p.fechaRegistro ASC")
   List<Pedido> findPedidosActivosPorModalidad(@Param("modalidad") String modalidad);
 
+  @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.mesa ORDER BY p.fechaRegistro DESC")
+  List<Pedido> findAllByOrderByFechaRegistroDesc();
+
+  @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.detalles d LEFT JOIN FETCH d.producto WHERE p.id = :id")
+  Optional<Pedido> findPedidoConDetallesById(@Param("id") Long id);
+
+  @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.detalles d LEFT JOIN FETCH d.producto WHERE p.mesa.numero = :numeroMesa AND p.estado NOT IN ('ENTREGADO', 'PAGADO', 'ANULADO') ORDER BY p.id DESC")
+  List<Pedido> findActiveOrderByMesaNumero(@Param("numeroMesa") Integer numeroMesa);
 }
