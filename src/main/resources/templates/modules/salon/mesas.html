@@ -4,9 +4,6 @@
     <th:block th:replace="~{components/head :: head}"></th:block>
     <title th:text="${titulo}">Gestión de Salón | Pollería Latina</title>
     <style>
-      body {
-        background-color: #f4f6f8;
-      }
       .tracking-wider {
         letter-spacing: 0.05em;
       }
@@ -157,7 +154,7 @@
               th:each="m : ${mesas}"
             >
               <div
-                class="card shadow-sm border-0 mesa-tarjeta-cuadrada rounded-4 bg-white cursor-pointer"
+                class="card shadow-sm border-0 mesa-tarjeta-cuadrada rounded-4 cursor-pointer"
                 th:data-mesa-id="${m.id}"
                 th:data-mesa-numero="${m.numero}"
                 th:data-mesa-estado="${m.estado}"
@@ -406,7 +403,7 @@
           >
             <div class="modal-dialog modal-dialog-centered modal-lg">
               <div
-                class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-white"
+                class="modal-content border-0 shadow-lg rounded-4 overflow-hidden"
               >
                 <!-- Header Ticket -->
                 <div
@@ -438,7 +435,7 @@
                   </div>
                 </div>
 
-                <div class="modal-body p-4 bg-white">
+                <div class="modal-body p-4">
                   <!-- Metadatos -->
                   <div class="p-3 mb-4 rounded-3 border border-dashed bg-light">
                     <div class="row g-3 align-items-center">
@@ -486,10 +483,7 @@
                           <th class="py-2 px-3 text-end border-0">Importe</th>
                         </tr>
                       </thead>
-                      <tbody
-                        id="tbodyConsumo"
-                        class="font-monospace fs-7 bg-white"
-                      >
+                      <tbody id="tbodyConsumo" class="font-monospace fs-7">
                         <!-- Inyectado por JS -->
                       </tbody>
                     </table>

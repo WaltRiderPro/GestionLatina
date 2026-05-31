@@ -37,7 +37,8 @@
         transition: all 0.2s ease-in-out;
         border: 2px solid transparent;
       }
-      .product-card:hover {
+      /* Efecto hover solo si el producto no está agotado */
+      .product-card.cursor-pointer:hover {
         border-color: #212529;
         transform: translateY(-3px);
       }
@@ -50,6 +51,12 @@
         background-color: #198754 !important;
         color: #fff !important;
         border-color: #198754 !important;
+      }
+
+      /* Estilo para iconos agotados */
+      .img-agotado {
+        filter: grayscale(100%);
+        opacity: 0.25 !important;
       }
 
       ::-webkit-scrollbar {
@@ -75,7 +82,8 @@
           <div class="row g-3">
             <div class="col-lg-7 col-xl-8 pos-catalog">
               <div
-                class="border-0 shadow-sm rounded-4 mb-3 position-sticky top-0"
+                class="border-0 shadow-sm rounded-4 mb-3 position-sticky top-0 bg-body"
+                style="z-index: 10"
               >
                 <div class="card-body p-3">
                   <div
@@ -125,21 +133,36 @@
                   class="col-6 col-md-4 col-xl-3 producto-item"
                   th:each="p : ${productos}"
                   th:data-categoria="${p.categoria.nombre}"
+                  th:if="${p.activo == true}"
                 >
                   <div
-                    class="card product-card h-100 shadow-sm rounded-4 cursor-pointer"
+                    class="card product-card h-100 shadow-sm rounded-4"
+                    th:classappend="${p.suficienteStock == true ? 'cursor-pointer' : 'opacity-75 bg-light pe-none'}"
                     th:data-id="${p.id}"
                     th:data-nombre="${p.nombre}"
                     th:data-precio="${p.precio}"
+                    th:data-stock="${p.suficienteStock}"
                     onclick="agregarItemDesdeTarjeta(this)"
                   >
                     <div
-                      class="d-flex justify-content-center align-items-center p-4 border-bottom rounded-top-4"
-                      style="height: 120px"
+                      class="d-flex justify-content-center align-items-center border-bottom rounded-top-4 position-relative overflow-hidden"
+                      style="height: 130px; padding: 0.4rem"
                     >
-                      <i
-                        class="fi fi-rr-room-service display-4 text-secondary opacity-50"
-                      ></i>
+                      <img
+                        th:src="${p.getListaImagenes() != null && !p.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${p.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}"
+                        alt="Foto del plato"
+                        class="w-100 h-100 rounded-3 shadow-sm"
+                        style="object-fit: cover"
+                        th:classappend="${p.suficienteStock == false ? 'img-agotado' : ''}"
+                      />
+
+                      <span
+                        th:if="${p.suficienteStock == false}"
+                        class="badge bg-danger position-absolute fs-8 px-3 py-2 shadow-sm"
+                        style="top: 12px; right: 12px"
+                      >
+                        <i class="fi fi-rr-ban me-1"></i> Agotado
+                      </span>
                     </div>
 
                     <div
@@ -152,7 +175,8 @@
                           >Categoría</span
                         >
                         <h6
-                          class="fw-bold text-dark fs-7 mb-1 lh-sm"
+                          class="fw-bold fs-7 mb-1 lh-sm"
+                          th:classappend="${p.suficienteStock == true ? 'text-dark' : 'text-muted text-decoration-line-through'}"
                           th:text="${p.nombre}"
                         >
                           Nombre Producto
@@ -165,6 +189,7 @@
                       </div>
                       <div
                         class="mt-2 text-primary fw-bold font-monospace fs-6"
+                        th:classappend="${p.suficienteStock == false ? 'text-muted' : ''}"
                         th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 'POINT', 2, 'COMMA')}"
                       >
                         S/ 0.00
@@ -394,13 +419,15 @@
       let modalidadActual = "LOCAL";
       let totalCalculado = 0.0;
 
-      // VARIABLES PARA CONTROL DE MESAS EXISTENTES
       let pedidoIdActivo = null;
       let cobrandoMesa = false;
 
-      // 1. CARGA DE CARRITO
+      // 1. CARGA DE CARRITO (Blindado contra clics en agotados)
       function agregarItemDesdeTarjeta(elementoHTML) {
-        if (cobrandoMesa) return; // Si estamos cobrando una mesa, no podemos agregar platos nuevos aquí (se hace en edición de pedido normal)
+        if (cobrandoMesa) return;
+
+        const tieneStock = elementoHTML.getAttribute("data-stock") === "true";
+        if (!tieneStock) return; // Si no tiene stock, evitamos que agregue al carrito
 
         const id = parseInt(elementoHTML.getAttribute("data-id"));
         const nombre = elementoHTML.getAttribute("data-nombre");
@@ -427,7 +454,7 @@
       }
 
       function restarDelCarrito(id) {
-        if (cobrandoMesa) return; // Bloqueado si está en modo cobro
+        if (cobrandoMesa) return;
         const index = carrito.findIndex((i) => i.productoId === id);
         if (index !== -1) {
           if (carrito[index].cantidad > 1) {
@@ -463,7 +490,6 @@
         carrito.forEach((item) => {
           totalCalculado += item.subtotal;
 
-          // Si estamos cobrando una mesa, ocultamos los botones de + y - para evitar manipulaciones
           const botonesCantidad = cobrandoMesa
             ? `<span class="font-monospace fw-bold fs-7 px-3 text-secondary">Cant: ${item.cantidad}</span>`
             : `<button type="button" class="btn btn-sm btn-link text-dark text-decoration-none shadow-none px-2 py-1" onclick="restarDelCarrito(${item.productoId})"><i class="fi fi-rr-minus-small"></i></button>
@@ -517,7 +543,7 @@
             // Llenamos el entorno con los datos existentes
             pedidoIdActivo = data.pedidoId;
             cobrandoMesa = true;
-            carrito = data.items; // Los items ya vienen formateados desde el Controller
+            carrito = data.items;
             renderizarCarrito();
 
             // Transformamos la UI para modo COBRO
@@ -533,14 +559,13 @@
               '<i class="fi fi-rr-sack-dollar"></i> Cobrar y Liberar Mesa';
           } else {
             mostrarToast("error", data.message);
-            resetearEstadoMesa(); // Si no la encuentra, asumimos que va a abrir una nueva
+            resetearEstadoMesa();
           }
         } catch (error) {
           mostrarToast("error", "Error de red al buscar la mesa.");
         }
       }
 
-      // Si el cajero borra o cambia el número, reseteamos el modo cobro para crear pedido nuevo
       function resetearEstadoMesa() {
         if (cobrandoMesa) {
           pedidoIdActivo = null;
@@ -565,7 +590,6 @@
       function seleccionarModalidad(mod, btnElement) {
         modalidadActual = mod;
 
-        // Reset general de variables
         resetearEstadoMesa();
         carrito = [];
         renderizarCarrito();
@@ -605,7 +629,7 @@
         if (carrito.length === 0) return;
 
         const payload = {
-          pedidoId: pedidoIdActivo, // Enviamos el ID si estamos cobrando, o null si es nuevo
+          pedidoId: pedidoIdActivo,
           modalidad: modalidadActual,
           nombreCliente: document
             .getElementById("iptNombreCliente")
@@ -616,7 +640,6 @@
             .getElementById("iptDireccion")
             .value.trim(),
 
-          // Requiere cobro si es Delivery/Llevar, o si buscamos una mesa explícitamente para cobrarla
           requiereCobroInmediato: modalidadActual !== "LOCAL" || cobrandoMesa,
 
           metodoPago:

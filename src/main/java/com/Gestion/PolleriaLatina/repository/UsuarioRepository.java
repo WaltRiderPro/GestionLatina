@@ -24,4 +24,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
       "AND u.eliminado = false " +
       "ORDER BY u.nombre ASC")
   List<Usuario> findRepartidoresActivos();
+
+  Optional<Usuario> findByUsernameAndDniAndCorreoAndEliminadoFalse(String username, String dni, String correo);
+
+  Optional<Usuario> findByResetTokenAndEliminadoFalse(String resetToken);
 }

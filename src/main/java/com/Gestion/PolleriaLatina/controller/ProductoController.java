@@ -28,43 +28,57 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductoController {
 
-    private final ProductoService productoService;
-    private final CategoriaService categoriaService;
-    private final PresentacionService presentacionService;
+  private final ProductoService productoService;
+  private final CategoriaService categoriaService;
+  private final PresentacionService presentacionService;
 
-    @GetMapping
-    @Transactional(readOnly = true)
-    public String listarProductos(Model model) {
-        model.addAttribute("productos", productoService.listarTodos());
-        model.addAttribute("categorias", categoriaService.listarTodas());
-        model.addAttribute("presentaciones", presentacionService.listarTodas());
-        model.addAttribute("producto", new Producto());
-        model.addAttribute("titulo", "Catálogo de Productos");
-        return "modules/catalogo/productos";
+  @GetMapping
+  @Transactional(readOnly = true)
+  public String listarProductos(Model model) {
+    model.addAttribute("productos", productoService.listarTodos());
+    model.addAttribute("categorias", categoriaService.listarTodas());
+    model.addAttribute("presentaciones", presentacionService.listarTodas());
+    model.addAttribute("producto", new Producto());
+    model.addAttribute("titulo", "Catálogo de Productos");
+    return "modules/catalogo/productos";
+  }
+
+  @PostMapping("/guardar")
+
+  @PreAuthorize("hasAuthority('PRODUCTOS_CREAR') or hasAuthority('PRODUCTOS_EDITAR')")
+  public String guardar(@ModelAttribute("producto") Producto producto,
+      @RequestParam("files") List<MultipartFile> archivos,
+      RedirectAttributes flash) {
+    try {
+      productoService.guardar(producto, archivos);
+      flash.addFlashAttribute("success", "Producto catalogado de forma exitosa.");
+    } catch (RuntimeException e) {
+      flash.addFlashAttribute("error", e.getMessage());
     }
+    return "redirect:/productos";
+  }
 
-    @PostMapping("/guardar")
-    public String guardar(@ModelAttribute("producto") Producto producto,
-            @RequestParam("files") List<MultipartFile> archivos, 
-            RedirectAttributes flash) {
-        try {
-            productoService.guardar(producto, archivos);
-            flash.addFlashAttribute("success", "Producto catalogado de forma exitosa.");
-        } catch (RuntimeException e) {
-            flash.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/productos";
+  @GetMapping("/eliminar/{id}")
+  @PreAuthorize("hasAuthority('PRODUCTOS_ELIMINAR')")
+  public String eliminar(@PathVariable Long id, RedirectAttributes flash) {
+    try {
+      productoService.eliminar(id);
+      flash.addFlashAttribute("success", "Producto retirado del catálogo.");
+    } catch (RuntimeException e) {
+      flash.addFlashAttribute("error", e.getMessage());
     }
+    return "redirect:/productos";
+  }
 
-    @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Long id, RedirectAttributes flash) {
-        try {
-            productoService.eliminar(id);
-            flash.addFlashAttribute("success", "Producto retirado del catálogo.");
-        } catch (RuntimeException e) {
-            flash.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/productos";
+  @GetMapping("/toggle-estado/{id}")
+  @PreAuthorize("hasAuthority('PRODUCTOS_EDITAR')")
+  public String cambiarEstado(@PathVariable Long id, RedirectAttributes flash) {
+    try {
+      productoService.cambiarEstado(id);
+      flash.addFlashAttribute("success", "El estado del producto fue actualizado exitosamente.");
+    } catch (Exception e) {
+      flash.addFlashAttribute("error", "Error: " + e.getMessage());
     }
-
+    return "redirect:/productos";
+  }
 }

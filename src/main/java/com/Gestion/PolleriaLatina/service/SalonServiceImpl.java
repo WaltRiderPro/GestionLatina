@@ -17,7 +17,6 @@ import com.Gestion.PolleriaLatina.model.Producto;
 import com.Gestion.PolleriaLatina.model.Receta;
 import com.Gestion.PolleriaLatina.model.Usuario;
 import com.Gestion.PolleriaLatina.model.enumerados.TipoMovimiento;
-import com.Gestion.PolleriaLatina.repository.InsumoRepository;
 import com.Gestion.PolleriaLatina.repository.KardexMovimientoRepository;
 import com.Gestion.PolleriaLatina.repository.MesaRepository;
 import com.Gestion.PolleriaLatina.repository.PedidoRepository;
@@ -35,7 +34,6 @@ public class SalonServiceImpl implements SalonService {
   private final PedidoRepository pedidoRepository;
   private final ProductoRepository productoRepository;
   private final RecetaRepository recetaRepository;
-  private final InsumoRepository insumoRepository;
   private final UsuarioRepository usuarioRepository;
   private final KardexMovimientoRepository kardexMovimientoRepository;
 
@@ -48,7 +46,22 @@ public class SalonServiceImpl implements SalonService {
   @Override
   @Transactional(readOnly = true)
   public List<Producto> listarProductosDisponibles() {
-    return productoRepository.findActiveProductsWithRelations();
+    List<Producto> productos = productoRepository.findActiveProductsWithRelations();
+
+    for (Producto p : productos) {
+      List<Receta> recetaPlato = recetaRepository.findByProductoId(p.getId());
+      boolean hayStock = true;
+
+      for (Receta receta : recetaPlato) {
+        if (receta.getInsumo().getStockActual() < receta.getCantidadNecesaria()) {
+          hayStock = false;
+          break;
+        }
+      }
+      p.setSuficienteStock(hayStock);
+    }
+
+    return productos;
   }
 
   @Override

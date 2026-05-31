@@ -3,7 +3,7 @@
   <head>
     <th:block th:replace="~{components/head :: head}"></th:block>
     <title th:text="${titulo}">Productos | Pollería Latina</title>
-    <!-- Google Fonts (opcional, no afecta el modo oscuro) -->
+    <!-- Google Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
       rel="stylesheet"
@@ -14,7 +14,7 @@
         font-family: "Inter", sans-serif;
       }
 
-      /* Título con gradiente que se adapta al modo oscuro (usa colores primarios) */
+      /* Título con gradiente */
       .th-title {
         background: linear-gradient(
           135deg,
@@ -27,7 +27,7 @@
         letter-spacing: -0.3px;
       }
 
-      /* Tarjeta principal: usa fondo de tarjeta del tema */
+      /* Tarjeta principal */
       .card-modern {
         background-color: var(--bs-card-bg);
         border: 1px solid var(--bs-border-color);
@@ -48,7 +48,7 @@
         padding: 1.2rem 1.5rem;
       }
 
-      /* Botón principal gourmet (usa variables de color) */
+      /* Botón principal gourmet */
       .btn-primary-gourmet {
         background: linear-gradient(
           105deg,
@@ -100,9 +100,6 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: var(--bs-secondary-color);
-        padding: 1rem 0.75rem;
-        border-top-left-radius: 16px;
-        border-top-right-radius: 16px;
       }
 
       .table-gourmet tbody tr {
@@ -153,12 +150,13 @@
         font-size: 0.7rem;
       }
 
-      .badge-status-inactive {
-        background: var(--bs-danger);
-        color: white;
+      .badge-status-warning {
+        background: var(--bs-warning);
+        color: #000;
         padding: 5px 12px;
         border-radius: 40px;
         font-weight: 600;
+        font-size: 0.7rem;
       }
 
       /* Botones de acción en tabla */
@@ -177,7 +175,6 @@
         background: rgba(var(--bs-primary-rgb), 0.15);
         color: var(--bs-primary);
       }
-
       .btn-action-primary:hover {
         background: var(--bs-primary);
         color: white;
@@ -188,9 +185,29 @@
         background: rgba(var(--bs-danger-rgb), 0.15);
         color: var(--bs-danger);
       }
-
       .btn-action-danger:hover {
         background: var(--bs-danger);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      /* NUEVOS ESTILOS PARA EL BOTÓN DE ACTIVAR/DESACTIVAR */
+      .btn-action-warning {
+        background: rgba(var(--bs-warning-rgb), 0.15);
+        color: #d39e00;
+      }
+      .btn-action-warning:hover {
+        background: var(--bs-warning);
+        color: #000;
+        transform: translateY(-2px);
+      }
+
+      .btn-action-success {
+        background: rgba(var(--bs-success-rgb), 0.15);
+        color: var(--bs-success);
+      }
+      .btn-action-success:hover {
+        background: var(--bs-success);
         color: white;
         transform: translateY(-2px);
       }
@@ -329,7 +346,7 @@
 
       <main class="app-wrapper">
         <div class="container-fluid px-4 px-xl-5 py-3">
-          <!-- Alertas (sin cambios funcionales, solo se adaptan al tema) -->
+          <!-- Alertas -->
           <div
             th:if="${success}"
             class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0"
@@ -462,18 +479,45 @@
                         ></span>
                       </td>
                       <td data-label="Estado">
-                        <span th:if="${prod.activo}" class="badge-status-active"
-                          ><i class="fa fa-check-circle me-1"></i>
-                          Disponible</span
-                        >
                         <span
-                          th:unless="${prod.activo}"
+                          th:if="${prod.activo == false}"
                           class="badge-status-inactive"
-                          ><i class="fa fa-ban me-1"></i> Agotado</span
                         >
+                          <i class="fa fa-ban me-1"></i> Desactivado
+                        </span>
+
+                        <span
+                          th:if="${prod.activo == true and prod.suficienteStock == false}"
+                          class="badge-status-warning"
+                          title="Falta materia prima en almacén"
+                        >
+                          <i class="fa fa-exclamation-triangle me-1"></i> Sin
+                          Insumos
+                        </span>
+
+                        <span
+                          th:if="${prod.activo == true and prod.suficienteStock == true}"
+                          class="badge-status-active"
+                        >
+                          <i class="fa fa-check-circle me-1"></i> Disponible
+                        </span>
                       </td>
                       <td data-label="Acciones" class="text-center">
                         <div class="d-flex justify-content-center gap-2">
+                          <!-- NUEVO BOTÓN: CAMBIAR ESTADO -->
+                          <a
+                            th:href="@{/productos/toggle-estado/{id}(id=${prod.id})}"
+                            class="btn btn-action"
+                            th:classappend="${prod.activo} ? 'btn-action-warning' : 'btn-action-success'"
+                            th:title="${prod.activo} ? 'Ocultar producto del menú' : 'Volver a mostrar producto'"
+                          >
+                            <i
+                              class="fa"
+                              th:classappend="${prod.activo} ? 'fa-eye-slash' : 'fa-eye'"
+                            ></i>
+                          </a>
+
+                          <!-- Botón Editar -->
                           <button
                             type="button"
                             class="btn btn-action btn-action-primary"
@@ -485,12 +529,16 @@
                             th:data-descripcion="${prod.descripcion}"
                             th:data-imagen="${prod.getListaImagenes() != null && !prod.getListaImagenes().isEmpty() ? prod.getListaImagenes().get(0) : ''}"
                             onclick="cargarEditarProducto(this)"
+                            title="Editar producto"
                           >
                             <i class="fa fa-pencil-alt fa-sm"></i>
                           </button>
+
+                          <!-- Botón Eliminar -->
                           <a
                             th:href="@{/productos/eliminar/{id}(id=${prod.id})}"
                             class="btn btn-action btn-action-danger"
+                            title="Eliminar producto"
                             onclick="
                               return confirm(
                                 '¿Deseas dar de baja este producto del menú?',
@@ -509,7 +557,7 @@
           </div>
         </div>
 
-        <!-- MODAL (con estilos adaptados al tema) -->
+        <!-- MODAL -->
         <div
           class="modal fade"
           id="modalProducto"
@@ -698,7 +746,7 @@
 
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
 
-    <!-- JavaScript idéntico al original (sin cambios funcionales) -->
+    <!-- JavaScript idéntico al original -->
     <script>
       let imageLotMemory = [];
       const triggerInput = document.getElementById("imgTriggerInput");

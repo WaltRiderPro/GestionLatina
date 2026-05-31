@@ -22,8 +22,8 @@ import com.Gestion.PolleriaLatina.model.Pedido;
 import com.Gestion.PolleriaLatina.model.Producto;
 import com.Gestion.PolleriaLatina.repository.CategoriaRepository;
 import com.Gestion.PolleriaLatina.repository.PedidoRepository;
-import com.Gestion.PolleriaLatina.repository.ProductoRepository;
 import com.Gestion.PolleriaLatina.service.PuntoVentaService;
+import com.Gestion.PolleriaLatina.service.SalonService; // IMPORTANTE INYECTAR ESTE SERVICIO
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class PuntoVentaController {
 
   private final PuntoVentaService puntoVentaService;
-  private final ProductoRepository productoRepository;
+  private final SalonService salonService; // USAMOS EL SERVICIO DEL SALÓN QUE YA CALCULA EL STOCK
   private final CategoriaRepository categoriaRepository;
   private final PedidoRepository pedidoRepository;
 
@@ -41,7 +41,8 @@ public class PuntoVentaController {
   @PreAuthorize("hasAuthority('PUNTO_VENTA_VER')")
   public String verPuntoVenta(Model model) {
 
-    List<Producto> productos = productoRepository.findAllConCategoriasYPresentaciones();
+    // USAMOS LA FUNCIÓN QUE EXPLOTA LA RECETA PARA SABER SI HAY STOCK
+    List<Producto> productos = salonService.listarProductosDisponibles();
     List<Categoria> categorias = categoriaRepository.findAll();
 
     model.addAttribute("productos", productos);

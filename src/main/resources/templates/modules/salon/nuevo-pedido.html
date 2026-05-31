@@ -1,256 +1,573 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <th:block th:replace="~{components/head :: head}"></th:block>
     <title th:text="${titulo}">Toma de Pedido | Pollería Latina</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        .menu-item-card {
-            transition: all 0.2s ease-in-out;
-        }
-        .menu-item-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 12px rgba(0,0,0,0.1) !important;
-        }
-        .sticky-cart {
-            position: sticky;
-            top: 20px;
-            max-height: calc(100vh - 40px);
-            display: flex;
-            flex-direction: column;
-        }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      /* Títulos premium */
+      .th-title {
+        background: linear-gradient(
+          135deg,
+          var(--bs-primary),
+          var(--bs-warning)
+        );
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.3px;
+      }
+
+      /* Tarjetas de menú */
+      .menu-item-card {
+        background-color: var(--bs-card-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 24px;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+      }
+      .menu-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(var(--bs-primary-rgb), 0.12) !important;
+        border-color: rgba(var(--bs-primary-rgb), 0.3);
+      }
+
+      /* Imágenes de los platos */
+      .menu-img {
+        border-radius: 16px;
+        object-fit: cover;
+        border: 2px solid var(--bs-border-color);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      }
+      .img-agotado {
+        filter: grayscale(100%);
+        opacity: 0.5;
+      }
+
+      /* Pestañas (Categorías) modernas */
+      .nav-pills-gourmet {
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(var(--bs-dark-rgb), 0.03);
+        border-radius: 50px;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        border: 1px solid var(--bs-border-color);
+      }
+      .nav-pills-gourmet::-webkit-scrollbar {
+        height: 0px; /* Oculta scrollbar en móvil */
+      }
+      .nav-pills-gourmet .nav-link {
+        border-radius: 40px;
+        color: var(--bs-body-color);
+        font-weight: 600;
+        padding: 0.6rem 1.4rem;
+        white-space: nowrap;
+        transition: all 0.3s;
+      }
+      .nav-pills-gourmet .nav-link:hover {
+        background: rgba(var(--bs-primary-rgb), 0.1);
+      }
+      .nav-pills-gourmet .nav-link.active {
+        background: linear-gradient(
+          135deg,
+          var(--bs-primary),
+          var(--bs-orange, #e07c2c)
+        );
+        color: white;
+        box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
+      }
+
+      /* Botón pedir */
+      .btn-pedir {
+        border-radius: 30px;
+        font-weight: 700;
+        padding: 0.4rem 1.2rem;
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        color: var(--bs-primary);
+        border: none;
+        transition: 0.2s;
+      }
+      .btn-pedir:hover {
+        background: var(--bs-primary);
+        color: white;
+        transform: scale(1.05);
+      }
+
+      /* Carrito fijo lateral */
+      .sticky-cart {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        display: flex;
+        flex-direction: column;
+        border-radius: 28px;
+        border: 1px solid var(--bs-border-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        background-color: var(--bs-card-bg);
+        overflow: hidden;
+      }
+      .cart-header {
+        background: rgba(var(--bs-primary-rgb), 0.05);
+        border-bottom: 1px solid var(--bs-border-color);
+      }
+
+      /* Inputs del carrito */
+      .form-control-cart {
+        border-radius: 16px;
+        border: 1.5px solid var(--bs-border-color);
+        background-color: var(--bs-body-bg);
+        padding: 0.6rem 1rem;
+      }
+      .form-control-cart:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), 0.1);
+      }
+
+      /* Botón enviar pedido */
+      .btn-enviar-pedido {
+        background: linear-gradient(105deg, var(--bs-success), #198754);
+        border: none;
+        border-radius: 20px;
+        padding: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 6px 15px rgba(var(--bs-success-rgb), 0.3);
+        transition: 0.2s;
+      }
+      .btn-enviar-pedido:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(var(--bs-success-rgb), 0.4);
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="page-layout">
-        <th:block th:replace="~{components/header :: header}"></th:block>
-        <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
 
-        <main class="app-wrapper">
-            <div class="container-fluid">
-                
-                <div class="d-flex justify-content-between align-items-center mb-4 mt-2 border-bottom pb-3">
-                    <div>
-                        <h1 class="h3 mb-0 fw-bold" th:text="'Comanda Digital - Mesa #' + ${mesa.numero}">Mesa #</h1>
-                        <p class="text-muted mb-0" th:text="'Capacidad máxima: ' + ${mesa.capacidadPersonas} + ' personas'"></p>
-                    </div>
-                    <div>
-                        <a th:href="@{/mesas}" class="btn btn-outline-danger btn-sm font-w600">
-                            <i class="fa fa-arrow-left me-1"></i> Cancelar y Regresar
-                        </a>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-lg-7">
-                        
-                        <ul class="nav nav-pills mb-3 bg-light p-1 rounded" id="pills-tab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active font-w600" id="cat-tab-all" data-bs-toggle="pill" data-bs-target="#cat-all" type="button" role="tab">Todos</button>
-                            </li>
-                            <li class="nav-item" th:each="c : ${categorias}" role="presentation">
-                                <button class="nav-link font-w600" th:id="'cat-tab-' + ${c.id}" data-bs-toggle="pill" th:data-bs-target="'#cat-' + ${c.id}" type="button" role="tab" th:text="${c.nombre}"></button>
-                            </li>
-                        </ul>
-
-                        <div class="tab-content" id="pills-tabContent">
-                            
-                            <div class="tab-pane fade show active" id="cat-all" role="tabpanel">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3" th:each="p : ${productos}">
-                                        <div class="card shadow-sm border-0 menu-item-card h-100">
-                                            <div class="card-body p-3 d-flex align-items-center">
-                                                <img th:src="${p.getListaImagenes() != null && !p.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${p.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}" 
-                                                     class="rounded me-3" width="70" height="70" style="object-fit: cover;" />
-                                                <div class="w-100">
-                                                    <h6 class="fw-bold mb-0" th:text="${p.nombre}">Nombre</h6>
-                                                    <small class="text-muted d-block" th:text="${p.presentacion != null ? p.presentacion.nombre : 'Porción'}"></small>
-                                                    <div class="d-flex justify-content-between align-items-center mt-2">
-                                                        <span class="fw-bold text-primary" th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)}"></span>
-                                                        <button type="button" class="btn btn-primary btn-sm px-3"
-                                                                th:data-id="${p.id}" th:data-nombre="${p.nombre}" th:data-precio="${p.precio}"
-                                                                onclick="agregarAlCarritoMozo(this)">
-                                                            <i class="fa fa-plus me-1"></i> Pedir
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tab-pane fade" th:each="c : ${categorias}" th:id="'cat-' + ${c.id}" role="tabpanel">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3" th:each="p : ${productos}" th:if="${p.categoria != null && p.categoria.id == c.id}">
-                                        <div class="card shadow-sm border-0 menu-item-card h-100">
-                                            <div class="card-body p-3 d-flex align-items-center">
-                                                <img th:src="${p.getListaImagenes() != null && !p.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${p.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}" 
-                                                     class="rounded me-3" width="70" height="70" style="object-fit: cover;" />
-                                                <div class="w-100">
-                                                    <h6 class="fw-bold mb-0" th:text="${p.nombre}"></h6>
-                                                    <small class="text-muted d-block" th:text="${p.presentacion != null ? p.presentacion.nombre : 'Porción'}"></small>
-                                                    <div class="d-flex justify-content-between align-items-center mt-2">
-                                                        <span class="fw-bold text-primary" th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)}"></span>
-                                                        <button type="button" class="btn btn-primary btn-sm px-3"
-                                                                th:data-id="${p.id}" th:data-nombre="${p.nombre}" th:data-precio="${p.precio}"
-                                                                onclick="agregarAlCarritoMozo(this)">
-                                                            <i class="fa fa-plus me-1"></i> Pedir
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div class="col-lg-5">
-                        <form th:action="@{/mesas/pedido/confirmar}" method="POST" id="formConfirmarComanda">
-                            <input type="hidden" name="mesaId" th:value="${mesa.id}" />
-                            
-                            <div class="card shadow-sm border-0 sticky-cart">
-                                <div class="card-header bg-primary text-white py-3">
-                                    <h5 class="card-title mb-0 fw-bold"><i class="fa fa-receipt me-1"></i> Comanda de Pedido</h5>
-                                </div>
-                                
-                                <div class="card-body p-3 flex-grow-1" data-simplebar style="overflow-y: auto;">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Nombre del Cliente</label>
-                                        <input type="text" name="nombreCliente" class="form-control" th:placeholder="'Mesa #' + ${mesa.numero}" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-semibold">Notas Especiales (Cocina)</label>
-                                        <input type="text" name="notasAdicionales" class="form-control" placeholder="Ej: Full cremas, chicha al tiempo..." />
-                                    </div>
-
-                                    <h6 class="fw-bold border-bottom pb-2 mb-2">Productos Seleccionados</h6>
-                                    
-                                    <div id="cartItemsList" class="d-flex flex-column gap-2">
-                                        </div>
-                                    
-                                    <div id="cartEmptyPlaceholder" class="text-center py-4 text-muted font-w500">
-                                        <i class="fa fa-shopping-basket mb-2 d-block fs-3"></i>
-                                        El pedido está vacío. Agrega platos del menú izquierdo.
-                                    </div>
-                                </div>
-
-                                <div class="card-footer bg-light p-3 border-top-0">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="fs-5 text-muted fw-semibold">Total a enviar:</span>
-                                        <span class="fs-3 fw-bold text-danger" id="lblCartTotal">S/ 0.00</span>
-                                    </div>
-                                    <div id="hiddenInputsWrapper"></div>
-
-                                    <button type="submit" class="btn btn-success w-100 text-white font-w600 py-2 fs-5 shadow-sm">
-                                        <i class="fa fa-paper-plane me-1"></i> Realizar Pedido (Enviar a Cocina)
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
+      <main class="app-wrapper">
+        <div class="container-fluid px-4 py-3">
+          <div
+            class="d-flex flex-wrap justify-content-between align-items-center mb-4 mt-2"
+          >
+            <div class="position-relative">
+              <h1
+                class="display-6 fw-bold th-title mb-1"
+                th:text="'Comanda Digital - Mesa #' + ${mesa.numero}"
+              >
+                Mesa #
+              </h1>
+              <p class="text-muted mb-0 fs-6">
+                <i class="fa fa-users me-1"></i> Capacidad máxima:
+                <span
+                  class="fw-semibold"
+                  th:text="${mesa.capacidadPersonas} + ' personas'"
+                ></span>
+              </p>
             </div>
-        </main>
-        <th:block th:replace="~{components/footer :: footer}"></th:block>
+            <div class="mt-3 mt-md-0">
+              <a
+                th:href="@{/mesas}"
+                class="btn btn-light border rounded-pill shadow-sm font-w600 px-4 py-2 text-danger hover-danger"
+              >
+                <i class="fa fa-arrow-left me-2"></i> Cancelar y Regresar
+              </a>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-xl-7 col-lg-6">
+              <ul
+                class="nav nav-pills nav-pills-gourmet mb-4"
+                id="pills-tab"
+                role="tablist"
+              >
+                <li class="nav-item" role="presentation">
+                  <button
+                    class="nav-link active"
+                    id="cat-tab-all"
+                    data-bs-toggle="pill"
+                    data-bs-target="#cat-all"
+                    type="button"
+                    role="tab"
+                  >
+                    Todos los platos
+                  </button>
+                </li>
+                <li
+                  class="nav-item"
+                  th:each="c : ${categorias}"
+                  role="presentation"
+                >
+                  <button
+                    class="nav-link"
+                    th:id="'cat-tab-' + ${c.id}"
+                    data-bs-toggle="pill"
+                    th:data-bs-target="'#cat-' + ${c.id}"
+                    type="button"
+                    role="tab"
+                    th:text="${c.nombre}"
+                  ></button>
+                </li>
+              </ul>
+
+              <div class="tab-content" id="pills-tabContent">
+                <div
+                  class="tab-pane fade show active"
+                  id="cat-all"
+                  role="tabpanel"
+                >
+                  <div class="row g-3">
+                    <div
+                      class="col-xl-6 col-md-12"
+                      th:each="p : ${productos}"
+                      th:if="${p.activo}"
+                    >
+                      <div class="card menu-item-card h-100">
+                        <div
+                          class="card-body p-3 d-flex align-items-center gap-3"
+                        >
+                          <img
+                            th:src="${p.getListaImagenes() != null && !p.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${p.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}"
+                            class="menu-img"
+                            th:classappend="${!p.suficienteStock} ? 'img-agotado' : ''"
+                            width="85"
+                            height="85"
+                          />
+                          <div class="w-100">
+                            <h6
+                              class="fw-bold mb-1 text-dark"
+                              style="line-height: 1.2"
+                              th:text="${p.nombre}"
+                            >
+                              Nombre
+                            </h6>
+                            <span
+                              class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill px-2 py-1 mb-2"
+                              style="font-size: 0.65rem"
+                              th:text="${p.presentacion != null ? p.presentacion.nombre : 'Porción'}"
+                            ></span>
+
+                            <div
+                              class="d-flex justify-content-between align-items-center"
+                            >
+                              <span
+                                class="fw-bold text-primary fs-6"
+                                th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)}"
+                              ></span>
+
+                              <button
+                                th:if="${p.suficienteStock}"
+                                type="button"
+                                class="btn btn-pedir"
+                                th:data-id="${p.id}"
+                                th:data-nombre="${p.nombre}"
+                                th:data-precio="${p.precio}"
+                                onclick="agregarAlCarritoMozo(this)"
+                              >
+                                <i class="fa fa-plus"></i> Pedir
+                              </button>
+                              <span
+                                th:unless="${p.suficienteStock}"
+                                class="badge bg-danger rounded-pill px-3 py-2 shadow-sm"
+                              >
+                                Agotado
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="tab-pane fade"
+                  th:each="c : ${categorias}"
+                  th:id="'cat-' + ${c.id}"
+                  role="tabpanel"
+                >
+                  <div class="row g-3">
+                    <div
+                      class="col-xl-6 col-md-12"
+                      th:each="p : ${productos}"
+                      th:if="${p.activo and p.categoria != null and p.categoria.id == c.id}"
+                    >
+                      <div class="card menu-item-card h-100">
+                        <div
+                          class="card-body p-3 d-flex align-items-center gap-3"
+                        >
+                          <img
+                            th:src="${p.getListaImagenes() != null && !p.getListaImagenes().isEmpty()} ? @{'/uploads/productos/' + ${p.getListaImagenes().get(0)}} : @{/assets/images/product/1.webp}"
+                            class="menu-img"
+                            th:classappend="${!p.suficienteStock} ? 'img-agotado' : ''"
+                            width="85"
+                            height="85"
+                          />
+                          <div class="w-100">
+                            <h6
+                              class="fw-bold mb-1 text-dark"
+                              style="line-height: 1.2"
+                              th:text="${p.nombre}"
+                            >
+                              Nombre
+                            </h6>
+                            <span
+                              class="badge bg-secondary bg-opacity-10 text-secondary border rounded-pill px-2 py-1 mb-2"
+                              style="font-size: 0.65rem"
+                              th:text="${p.presentacion != null ? p.presentacion.nombre : 'Porción'}"
+                            ></span>
+
+                            <div
+                              class="d-flex justify-content-between align-items-center"
+                            >
+                              <span
+                                class="fw-bold text-primary fs-6"
+                                th:text="'S/ ' + ${#numbers.formatDecimal(p.precio, 1, 2)}"
+                              ></span>
+
+                              <button
+                                th:if="${p.suficienteStock}"
+                                type="button"
+                                class="btn btn-pedir"
+                                th:data-id="${p.id}"
+                                th:data-nombre="${p.nombre}"
+                                th:data-precio="${p.precio}"
+                                onclick="agregarAlCarritoMozo(this)"
+                              >
+                                <i class="fa fa-plus"></i> Pedir
+                              </button>
+                              <span
+                                th:unless="${p.suficienteStock}"
+                                class="badge bg-danger rounded-pill px-3 py-2 shadow-sm"
+                              >
+                                Agotado
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xl-5 col-lg-6">
+              <form
+                th:action="@{/mesas/pedido/confirmar}"
+                method="POST"
+                id="formConfirmarComanda"
+              >
+                <input type="hidden" name="mesaId" th:value="${mesa.id}" />
+
+                <div class="sticky-cart pb-2">
+                  <div
+                    class="cart-header py-3 px-4 d-flex align-items-center gap-3"
+                  >
+                    <div
+                      class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                      style="width: 45px; height: 45px"
+                    >
+                      <i class="fa fa-receipt fs-5"></i>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold text-primary">Ticket de Orden</h5>
+                      <small class="text-muted"
+                        >Revise los platos antes de enviar</small
+                      >
+                    </div>
+                  </div>
+
+                  <div
+                    class="card-body p-4 flex-grow-1"
+                    data-simplebar
+                    style="overflow-y: auto"
+                  >
+                    <div class="mb-3">
+                      <label
+                        class="form-label fw-bold text-muted text-uppercase"
+                        style="font-size: 0.75rem"
+                        >Nombre del Cliente (Opcional)</label
+                      >
+                      <input
+                        type="text"
+                        name="nombreCliente"
+                        class="form-control form-control-cart"
+                        th:placeholder="'Mesa #' + ${mesa.numero}"
+                      />
+                    </div>
+                    <div class="mb-4">
+                      <label
+                        class="form-label fw-bold text-muted text-uppercase"
+                        style="font-size: 0.75rem"
+                        >Notas para la cocina</label
+                      >
+                      <input
+                        type="text"
+                        name="notasAdicionales"
+                        class="form-control form-control-cart"
+                        placeholder="Ej: Ají aparte, chicha sin hielo..."
+                      />
+                    </div>
+
+                    <h6 class="fw-bold border-bottom pb-2 mb-3 text-dark">
+                      Platos Seleccionados
+                    </h6>
+
+                    <div
+                      id="cartItemsList"
+                      class="d-flex flex-column gap-3"
+                    ></div>
+
+                    <div
+                      id="cartEmptyPlaceholder"
+                      class="text-center py-5 text-muted"
+                    >
+                      <div
+                        class="bg-light rounded-circle d-inline-flex p-4 mb-3"
+                      >
+                        <i class="fa fa-shopping-basket fs-1 opacity-50"></i>
+                      </div>
+                      <p class="mb-0 fw-semibold">La comanda está vacía.</p>
+                      <small>Toque "Pedir" en el menú izquierdo.</small>
+                    </div>
+                  </div>
+
+                  <div class="px-4 pt-2 pb-3">
+                    <div
+                      class="p-3 bg-light rounded-4 border mb-3 d-flex justify-content-between align-items-center"
+                    >
+                      <span class="fs-6 text-muted fw-bold text-uppercase"
+                        >Total:</span
+                      >
+                      <span class="fs-3 fw-bold text-danger" id="lblCartTotal"
+                        >S/ 0.00</span
+                      >
+                    </div>
+                    <div id="hiddenInputsWrapper"></div>
+
+                    <button
+                      type="submit"
+                      class="btn btn-enviar-pedido w-100 text-white fs-6"
+                    >
+                      <i class="fa fa-paper-plane me-2"></i> ENVIAR A COCINA
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
     </div>
     <th:block th:replace="~{components/scripts :: scripts}"></th:block>
 
     <script>
-        let carritoMozoMemory = [];
+      let carritoMozoMemory = [];
 
-        function agregarAlCarritoMozo(btn) {
-            const id = btn.getAttribute('data-id');
-            const nombre = btn.getAttribute('data-nombre');
-            const precio = parseFloat(btn.getAttribute('data-precio'));
+      function agregarAlCarritoMozo(btn) {
+        const id = btn.getAttribute("data-id");
+        const nombre = btn.getAttribute("data-nombre");
+        const precio = parseFloat(btn.getAttribute("data-precio"));
 
-            const itemExistente = carritoMozoMemory.find(item => item.id === id);
+        const itemExistente = carritoMozoMemory.find((item) => item.id === id);
+        if (itemExistente) {
+          itemExistente.cantidad++;
+        } else {
+          carritoMozoMemory.push({ id, nombre, precio, cantidad: 1 });
+        }
+        renderizarCarritoComanda();
+      }
 
-            if (itemExistente) {
-                itemExistente.cantidad++;
-            } else {
-                carritoMozoMemory.push({ id, nombre, precio, cantidad: 1 });
-            }
-            renderizarCarritoComanda();
+      function cambiarCantidadCarrito(id, delta) {
+        const item = carritoMozoMemory.find((item) => item.id === id);
+        if (item) {
+          item.cantidad += delta;
+          if (item.cantidad <= 0) {
+            carritoMozoMemory = carritoMozoMemory.filter((i) => i.id !== id);
+          }
+          renderizarCarritoComanda();
+        }
+      }
+
+      function eliminarItemCarrito(id) {
+        carritoMozoMemory = carritoMozoMemory.filter((i) => i.id !== id);
+        renderizarCarritoComanda();
+      }
+
+      function renderizarCarritoComanda() {
+        const listContainer = document.getElementById("cartItemsList");
+        const placeholder = document.getElementById("cartEmptyPlaceholder");
+        const totalLabel = document.getElementById("lblCartTotal");
+        const hiddenWrapper = document.getElementById("hiddenInputsWrapper");
+
+        listContainer.innerHTML = "";
+        hiddenWrapper.innerHTML = "";
+        let totalAcumulado = 0.0;
+
+        if (carritoMozoMemory.length === 0) {
+          placeholder.classList.remove("d-none");
+          totalLabel.innerText = "S/ 0.00";
+          return;
         }
 
-        function cambiarCantidadCarrito(id, delta) {
-            const item = carritoMozoMemory.find(item => item.id === id);
-            if (item) {
-                item.cantidad += delta;
-                if (item.cantidad <= 0) {
-                    carritoMozoMemory = carritoMozoMemory.filter(i => i.id !== id);
-                }
-                renderizarCarritoComanda();
-            }
-        }
+        placeholder.classList.add("d-none");
 
-        function eliminarItemCarrito(id) {
-            carritoMozoMemory = carritoMozoMemory.filter(i => i.id !== id);
-            renderizarCarritoComanda();
-        }
+        carritoMozoMemory.forEach((item) => {
+          const subtotalItem = item.precio * item.cantidad;
+          totalAcumulado += subtotalItem;
 
-        function renderizarCarritoComanda() {
-            const listContainer = document.getElementById('cartItemsList');
-            const placeholder = document.getElementById('cartEmptyPlaceholder');
-            const totalLabel = document.getElementById('lblCartTotal');
-            const hiddenWrapper = document.getElementById('hiddenInputsWrapper');
-
-            listContainer.innerHTML = "";
-            hiddenWrapper.innerHTML = "";
-            let totalAcumulado = 0.0;
-
-            if (carritoMozoMemory.length === 0) {
-                placeholder.classList.remove('d-none');
-                totalLabel.innerText = "S/ 0.00";
-                return;
-            }
-
-            placeholder.classList.add('d-none');
-
-            carritoMozoMemory.forEach(item => {
-                const subtotalItem = item.precio * item.cantidad;
-                totalAcumulado += subtotalItem;
-
-                // 1. Crear fila UI de la comanda
-                const row = document.createElement('div');
-                row.className = "d-flex justify-content-between align-items-center p-2 rounded border bg-white shadow-2xs";
-                row.innerHTML = `
-                    <div style="flex: 1;">
-                        <span class="fw-bold text-dark d-block text-1xs">${item.nombre}</span>
-                        <small class="text-muted">S/ ${item.precio.toFixed(2)} c/u</small>
+          // Diseño premium para la fila del carrito
+          const row = document.createElement("div");
+          row.className =
+            "d-flex justify-content-between align-items-center p-3 rounded-4 border bg-body";
+          row.style.boxShadow = "0 2px 8px rgba(0,0,0,0.02)";
+          row.innerHTML = `
+                    <div style="flex: 1; padding-right: 10px;">
+                        <span class="fw-bold text-dark d-block mb-1" style="line-height:1.1; font-size: 0.9rem;">${item.nombre}</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border">S/ ${item.precio.toFixed(2)} c/u</span>
                     </div>
-                    <div class="d-flex align-items-center me-3">
-                        <button type="button" class="btn btn-outline-secondary btn-xs p-0 font-weight-bold rounded" style="width:22px; height:22px;" onclick="cambiarCantidadCarrito('${item.id}', -1)">-</button>
-                        <span class="mx-2 font-w600 text-dark">${item.cantidad}</span>
-                        <button type="button" class="btn btn-outline-secondary btn-xs p-0 font-weight-bold rounded" style="width:22px; height:22px;" onclick="cambiarCantidadCarrito('${item.id}', 1)">+</button>
+                    <div class="d-flex align-items-center bg-light border rounded-pill px-2 py-1 me-3">
+                        <button type="button" class="btn btn-sm text-secondary p-0 fw-bold border-0" style="width:24px; height:24px;" onclick="cambiarCantidadCarrito('${item.id}', -1)"><i class="fa fa-minus"></i></button>
+                        <span class="mx-2 fw-bold text-dark" style="min-width: 15px; text-align: center;">${item.cantidad}</span>
+                        <button type="button" class="btn btn-sm text-primary p-0 fw-bold border-0" style="width:24px; height:24px;" onclick="cambiarCantidadCarrito('${item.id}', 1)"><i class="fa fa-plus"></i></button>
                     </div>
-                    <div class="text-end" style="width: 80px;">
-                        <span class="fw-bold text-danger text-1xs d-block">S/ ${subtotalItem.toFixed(2)}</span>
-                        <a href="javascript:void(0)" class="text-muted text-2xs" onclick="eliminarItemCarrito('${item.id}')"><i class="fa fa-trash-alt text-danger"></i></a>
+                    <div class="text-end" style="min-width: 75px;">
+                        <span class="fw-bold text-danger d-block mb-1">S/ ${subtotalItem.toFixed(2)}</span>
+                        <a href="javascript:void(0)" class="text-danger opacity-75 hover-opacity-100" style="font-size:0.8rem;" onclick="eliminarItemCarrito('${item.id}')"><i class="fa fa-trash-alt"></i> Quitar</a>
                     </div>
                 `;
-                listContainer.appendChild(row);
+          listContainer.appendChild(row);
 
-                // 2. Inyectar los inputs ocultos indexados para la sincronización nativa de Spring
-                hiddenWrapper.innerHTML += `<input type="hidden" name="productoIds" value="${item.id}" />`;
-                hiddenWrapper.innerHTML += `<input type="hidden" name="cantidades" value="${item.cantidad}" />`;
-            });
+          hiddenWrapper.innerHTML += `<input type="hidden" name="productoIds" value="${item.id}" />`;
+          hiddenWrapper.innerHTML += `<input type="hidden" name="cantidades" value="${item.cantidad}" />`;
+        });
 
-            totalLabel.innerText = "S/ " + totalAcumulado.toFixed(2);
-        }
+        totalLabel.innerText = "S/ " + totalAcumulado.toFixed(2);
+      }
 
-        // Intercepta el submit para validar que el mozo no envíe una comanda vacía
-        document.getElementById('formConfirmarComanda').addEventListener('submit', function(e) {
-            if (carritoMozoMemory.length === 0) {
-                e.preventDefault();
-                alert("Operación inválida: El pedido debe contener al menos un platillo del menú antes de ser enviado a cocina.");
-            }
+      document
+        .getElementById("formConfirmarComanda")
+        .addEventListener("submit", function (e) {
+          if (carritoMozoMemory.length === 0) {
+            e.preventDefault();
+            alert(
+              "Operación inválida: El pedido debe contener al menos un platillo del menú antes de ser enviado a cocina.",
+            );
+          }
         });
     </script>
-</body>
+  </body>
 </html>

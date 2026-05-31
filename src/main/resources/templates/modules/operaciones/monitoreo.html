@@ -277,7 +277,11 @@
                               >
                             </div>
                           </div>
-                          <div class="border-top pt-2 mt-2">
+                          <!-- Botón de entrega: SOLO visible si el estado es LISTO -->
+                          <div
+                            class="border-top pt-2 mt-2"
+                            th:if="${p.estado == 'LISTO'}"
+                          >
                             <form
                               th:action="@{/pedidos/marcar-entregado}"
                               method="POST"

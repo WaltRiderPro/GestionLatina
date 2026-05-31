@@ -1,6 +1,5 @@
 package com.Gestion.PolleriaLatina.model;
 
-import java.beans.Transient;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -58,6 +58,10 @@ public class Producto {
   @Column(nullable = false)
   private boolean activo = true;
 
+  @Transient
+  @Builder.Default
+  private boolean suficienteStock = true;
+
   @Builder.Default
   @Column(nullable = false)
   private boolean eliminado = false;
@@ -66,12 +70,13 @@ public class Producto {
   private String imagenesJson;
 
   @Transient
-  public List<String> getListaImagenes(){
-    if (this.imagenesJson == null || this.imagenesJson.isEmpty()){
+  public List<String> getListaImagenes() {
+    if (this.imagenesJson == null || this.imagenesJson.isEmpty()) {
       return Collections.emptyList();
     }
     try {
-      return new ObjectMapper().readValue(this.imagenesJson, new TypeReference<List<String>>() {});
+      return new ObjectMapper().readValue(this.imagenesJson, new TypeReference<List<String>>() {
+      });
     } catch (Exception e) {
       return Collections.emptyList();
     }

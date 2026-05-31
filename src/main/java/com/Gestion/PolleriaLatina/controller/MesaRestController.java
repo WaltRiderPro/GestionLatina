@@ -27,8 +27,6 @@ public class MesaRestController {
   public Map<String, Object> obtenerPedidoActivoMesa(@PathVariable Long mesaId) {
     Map<String, Object> response = new HashMap<>();
 
-    // Obtenemos la lista (por si hay datos sucios de pruebas) y tomamos el más
-    // reciente
     List<Pedido> pedidos = pedidoRepository.findActiveOrderByMesaId(mesaId);
     Pedido pedido = pedidos.isEmpty() ? null : pedidos.get(0);
 

@@ -88,4 +88,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
   @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.detalles d LEFT JOIN FETCH d.producto WHERE p.mesa.numero = :numeroMesa AND p.estado NOT IN ('ENTREGADO', 'PAGADO', 'ANULADO') ORDER BY p.id DESC")
   List<Pedido> findActiveOrderByMesaNumero(@Param("numeroMesa") Integer numeroMesa);
+
+  @Query("SELECT p FROM Pedido p WHERE p.modalidad = 'DELIVERY' AND p.repartidor IS NULL AND p.estado NOT IN ('ENTREGADO', 'ANULADO') ORDER BY p.fechaRegistro ASC")
+  List<Pedido> findDeliveriesSinRepartidor();
 }
