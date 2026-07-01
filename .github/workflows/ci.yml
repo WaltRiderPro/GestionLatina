@@ -44,7 +44,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: root
+          POSTGRES_PASSWORD: 123456
           POSTGRES_DB: Polleria_Latina_DB
         ports:
           - 5432:5432
@@ -74,7 +74,7 @@ jobs:
         DB_PORT: 5432
         DB_NAME: Polleria_Latina_DB
         DB_USERNAME: postgres
-        DB_PASSWORD: root
+        DB_PASSWORD: 123456
         JWT_SECRET: secreto_generico_para_pasar_las_pruebas_en_ci
         MAIL_USERNAME: test@test.com
         MAIL_PASSWORD: test
