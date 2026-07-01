@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo}">Reportar Incidencia | Pollería Latina</title>
+    <style>
+      .urgency-card {
+        transition: all 0.2s;
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+      .urgency-card:hover {
+        transform: translateY(-3px);
+      }
+      .urgency-radio:checked + .urgency-card {
+        border-color: var(--bs-primary);
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+      }
+
+      /* Galería de fotos (Reutilizada de productos) */
+      .photo-gallery-grid {
+        background-color: rgba(var(--bs-dark-rgb), 0.02);
+        border-radius: 16px;
+        border: 1.5px dashed var(--bs-border-color);
+        min-height: 120px;
+        padding: 16px;
+      }
+      .remove-img-btn {
+        background: var(--bs-danger);
+        border: none;
+        color: white;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        font-size: 14px;
+        line-height: 1;
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper p-3 p-lg-4">
+        <div class="container-fluid maxw-900px m-auto">
+          <div
+            th:if="${success}"
+            class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4"
+          >
+            <i class="fi fi-rr-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+          <div
+            th:if="${error}"
+            class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 mb-4"
+          >
+            <i class="fi fi-rr-triangle-warning me-2"></i>
+            <span th:text="${error}"></span>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="alert"
+            ></button>
+          </div>
+
+          <div class="mb-4">
+            <h2
+              class="fw-bold tracking-wider text-dark d-flex align-items-center gap-2"
+            >
+              <i class="fi fi-rr-headset text-primary"></i> Centro de Reportes
+            </h2>
+            <p class="text-muted font-monospace">
+              Describe el problema que estás experimentando para que
+              administración lo solucione.
+            </p>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-light border-bottom p-4">
+              <h5
+                class="fw-bold mb-0 text-uppercase fs-6 tracking-wider text-secondary"
+              >
+                <i class="fi fi-rr-document-signed me-2"></i> Formulario de
+                Incidencia
+              </h5>
+            </div>
+
+            <form
+              th:action="@{/incidencias/guardar}"
+              th:object="${incidencia}"
+              method="POST"
+              enctype="multipart/form-data"
+            >
+              <div class="card-body p-4 p-md-5">
+                <div class="row g-4">
+                  <div class="col-md-8">
+                    <label class="form-label fw-bold text-dark"
+                      >Título breve del problema
+                      <span class="text-danger">*</span></label
+                    >
+                    <input
+                      type="text"
+                      th:field="*{titulo}"
+                      class="form-control form-control-lg fs-6 shadow-none border bg-light"
+                      required
+                      placeholder="Ej: Falla en la impresora térmica de Caja 1"
+                    />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label fw-bold text-dark"
+                      >Área o Tipo Afectado
+                      <span class="text-danger">*</span></label
+                    >
+                    <select
+                      th:field="*{tipo}"
+                      class="form-select form-select-lg fs-6 shadow-none border bg-light"
+                      required
+                    >
+                      <option value="" disabled selected>
+                        -- Seleccionar --
+                      </option>
+                      <option value="SISTEMA_CAJA">
+                        Sistema / POS de Caja
+                      </option>
+                      <option value="HARDWARE">
+                        Equipos (Impresoras, PCs)
+                      </option>
+                      <option value="INFRAESTRUCTURA">
+                        Local (Luz, Agua, Baños)
+                      </option>
+                      <option value="COCINA">Insumos / Cocina</option>
+                      <option value="CLIENTE">Queja de Cliente</option>
+                      <option value="OTROS">Otros</option>
+                    </select>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold text-dark mb-3"
+                      >Nivel de Gravedad
+                      <span class="text-danger">*</span></label
+                    >
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <input
+                          type="radio"
+                          th:field="*{nivelGravedad}"
+                          value="BAJO"
+                          class="d-none urgency-radio"
+                          id="urg-bajo"
+                          required
+                        />
+                        <label
+                          for="urg-bajo"
+                          class="card urgency-card h-100 p-3 bg-light shadow-none"
+                        >
+                          <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="fi fi-rr-info text-info fs-5"></i>
+                            <span class="fw-bold">Leve / Bajo</span>
+                          </div>
+                          <small class="text-muted fs-8 lh-sm"
+                            >No afecta la atención. Puede esperar.</small
+                          >
+                        </label>
+                      </div>
+                      <div class="col-md-4">
+                        <input
+                          type="radio"
+                          th:field="*{nivelGravedad}"
+                          value="MEDIO"
+                          class="d-none urgency-radio"
+                          id="urg-medio"
+                        />
+                        <label
+                          for="urg-medio"
+                          class="card urgency-card h-100 p-3 bg-light shadow-none"
+                        >
+                          <div class="d-flex align-items-center gap-2 mb-1">
+                            <i
+                              class="fi fi-rr-engine-warning text-warning fs-5"
+                            ></i>
+                            <span class="fw-bold">Medio / Molesto</span>
+                          </div>
+                          <small class="text-muted fs-8 lh-sm"
+                            >Dificulta el trabajo pero hay alternativas.</small
+                          >
+                        </label>
+                      </div>
+                      <div class="col-md-4">
+                        <input
+                          type="radio"
+                          th:field="*{nivelGravedad}"
+                          value="EMERGENCIA"
+                          class="d-none urgency-radio"
+                          id="urg-emergencia"
+                        />
+                        <label
+                          for="urg-emergencia"
+                          class="card urgency-card h-100 p-3 bg-light shadow-none"
+                        >
+                          <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="fi fi-rr-siren-on text-danger fs-5"></i>
+                            <span class="fw-bold text-danger">Emergencia</span>
+                          </div>
+                          <small class="text-muted fs-8 lh-sm"
+                            >Atención paralizada. Requiere acción
+                            inmediata.</small
+                          >
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold text-dark"
+                      >Descripción detallada
+                      <span class="text-danger">*</span></label
+                    >
+                    <textarea
+                      th:field="*{descripcion}"
+                      class="form-control shadow-none border bg-light"
+                      rows="4"
+                      required
+                      placeholder="Explica exactamente qué sucedió, a qué hora y qué acciones tomaste..."
+                    ></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-bold text-dark mb-2"
+                      ><i class="fi fi-rr-camera me-1"></i> Evidencias
+                      Fotográficas (Opcional)</label
+                    >
+                    <div
+                      class="photo-gallery-grid d-flex flex-wrap align-items-center gap-3"
+                      id="previewContainer"
+                    >
+                      <p
+                        id="galleryPlaceholder"
+                        class="text-muted w-100 text-center my-auto small fw-semibold m-0"
+                      >
+                        Haz clic en "Añadir Evidencia" para subir fotos del
+                        error o daño.
+                      </p>
+                    </div>
+                    <div class="mt-3">
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary rounded-pill px-4 fw-bold font-monospace fs-8 tracking-wide"
+                        onclick="
+                          document.getElementById('imgTriggerInput').click()
+                        "
+                      >
+                        <i class="fi fi-rr-picture me-1"></i> Añadir Evidencia
+                      </button>
+                      <input
+                        type="file"
+                        id="imgTriggerInput"
+                        class="d-none"
+                        accept="image/png, image/jpeg, image/webp"
+                      />
+                      <input
+                        type="file"
+                        name="files"
+                        id="finalBundleInput"
+                        class="d-none"
+                        multiple
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="card-footer bg-white border-top p-4 d-flex justify-content-end gap-3"
+              >
+                <button
+                  type="reset"
+                  class="btn btn-light border px-4 fw-bold text-uppercase fs-8"
+                >
+                  Limpiar
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary px-5 fw-bold text-uppercase tracking-wider shadow-sm d-flex align-items-center gap-2"
+                >
+                  <i class="fi fi-rr-paper-plane"></i> Enviar Reporte
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      // Lógica de múltiples imágenes
+      let imageLotMemory = [];
+      const triggerInput = document.getElementById("imgTriggerInput");
+      const bundleInput = document.getElementById("finalBundleInput");
+      const container = document.getElementById("previewContainer");
+      const placeholder = document.getElementById("galleryPlaceholder");
+
+      triggerInput.addEventListener("change", function (e) {
+        if (e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        imageLotMemory.push(file);
+        refreshPhotoQueue();
+        triggerInput.value = "";
+      });
+
+      function refreshPhotoQueue() {
+        const dataTransfer = new DataTransfer();
+        container.innerHTML = "";
+
+        if (imageLotMemory.length === 0) {
+          container.appendChild(placeholder);
+          bundleInput.files = dataTransfer.files;
+          return;
+        }
+
+        imageLotMemory.forEach((file, index) => {
+          dataTransfer.items.add(file);
+          const div = document.createElement("div");
+          div.className = "position-relative d-inline-block";
+          div.style = "width: 80px; height: 80px;";
+
+          const img = document.createElement("img");
+          img.style =
+            "width:100%; height:100%; object-fit:cover; border-radius:12px; border:2px solid var(--bs-border-color);";
+
+          const reader = new FileReader();
+          reader.onload = function (evt) {
+            img.src = evt.target.result;
+          };
+          reader.readAsDataURL(file);
+
+          const closeBtn = document.createElement("button");
+          closeBtn.type = "button";
+          closeBtn.className =
+            "remove-img-btn d-flex justify-content-center align-items-center";
+          closeBtn.innerHTML = "<i class='fi fi-rr-cross-small'></i>";
+          closeBtn.onclick = function () {
+            imageLotMemory.splice(index, 1);
+            refreshPhotoQueue();
+          };
+
+          div.appendChild(img);
+          div.appendChild(closeBtn);
+          container.appendChild(div);
+        });
+        bundleInput.files = dataTransfer.files;
+      }
+    </script>
+  </body>
+</html>

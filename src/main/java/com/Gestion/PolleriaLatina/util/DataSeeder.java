@@ -36,6 +36,7 @@ public class DataSeeder implements CommandLineRunner {
     List<String[]> modulosData = Arrays.asList(
         new String[] { "DASHBOARD", "Principal" },
         new String[] { "REPORTES", "Principal" },
+        new String[] { "REPORTAR_INCIDENCIA", "Principal" },
         new String[] { "PUNTO_VENTA", "Operaciones" },
         new String[] { "COCINA", "Operaciones" },
         new String[] { "MESAS", "Operaciones" },
@@ -51,7 +52,8 @@ public class DataSeeder implements CommandLineRunner {
         new String[] { "UNIDADES", "Almacén" },
         new String[] { "DELIVERY", "Delivery" },
         new String[] { "USUARIOS", "Seguridad" },
-        new String[] { "ROLES", "Seguridad" });
+        new String[] { "ROLES", "Seguridad" },
+        new String[] { "GESTION_INCIDENCIAS", "Seguridad" });
 
     for (String[] data : modulosData) {
       if (permisoRepository.findByNombre(data[0]).isEmpty()) {

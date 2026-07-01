@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title th:text="${titulo}">
+      Historial de Incidencias | Pollería Latina
+    </title>
+    <style>
+      .tracking-wider {
+        letter-spacing: 0.05em;
+      }
+      .fs-7 {
+        font-size: 0.8rem;
+      }
+      .fs-8 {
+        font-size: 0.72rem;
+      }
+
+      .table-hover tbody tr:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.03);
+        transition: background-color 0.2s ease;
+      }
+
+      .filter-toolbar {
+        background-color: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper p-3 p-lg-4">
+        <div class="container-fluid maxw-1200px m-auto">
+          <div
+            class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4"
+          >
+            <div>
+              <h2
+                class="fw-bold tracking-wider text-dark d-flex align-items-center gap-2 mb-1"
+              >
+                <i class="fi fi-rr-time-past text-primary"></i> Historial
+                Completo
+              </h2>
+              <p class="text-muted font-monospace fs-7 mb-0">
+                Registro histórico de todas las incidencias reportadas en el
+                sistema.
+              </p>
+            </div>
+            <div>
+              <a
+                th:href="@{/incidencias/gestion}"
+                class="btn btn-outline-dark shadow-sm font-monospace fs-7 fw-bold d-flex align-items-center gap-2"
+              >
+                <i class="fi fi-rr-arrow-left"></i> Volver a la Bandeja
+              </a>
+            </div>
+          </div>
+
+          <div class="filter-toolbar rounded-4 p-3 mb-4 shadow-sm">
+            <div class="row g-3 align-items-center">
+              <div class="col-lg-5 col-md-12">
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0"
+                    ><i class="fi fi-rr-search text-muted"></i
+                  ></span>
+                  <input
+                    type="text"
+                    id="searchInput"
+                    class="form-control bg-light border-start-0 shadow-none font-monospace fs-7"
+                    placeholder="Buscar por código, título, usuario o área..."
+                    onkeyup="filtrarTabla()"
+                  />
+                </div>
+              </div>
+              <div class="col-lg-3 col-md-6">
+                <select
+                  id="filterEstado"
+                  class="form-select shadow-none font-monospace fs-7 bg-light"
+                  onchange="filtrarTabla()"
+                >
+                  <option value="TODOS" selected>Todos los Estados</option>
+                  <option value="PENDIENTE">Pendientes</option>
+                  <option value="RESUELTO">Resueltos</option>
+                </select>
+              </div>
+              <div class="col-lg-4 col-md-6 text-end">
+                <span
+                  class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fs-7 font-monospace py-2 px-3"
+                >
+                  Total Registros:
+                  <span th:text="${#lists.size(ticketsHistorial)}"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+              <table
+                class="table table-hover align-middle mb-0"
+                id="historialTable"
+              >
+                <thead
+                  class="bg-light text-uppercase fs-8 tracking-wider font-monospace text-muted border-bottom"
+                >
+                  <tr>
+                    <th class="py-3 px-4 border-0">Código / Fecha</th>
+                    <th class="py-3 border-0">Incidencia</th>
+                    <th class="py-3 border-0">Área</th>
+                    <th class="py-3 border-0">Gravedad</th>
+                    <th class="py-3 text-center border-0">Estado</th>
+                    <th class="py-3 px-4 text-center border-0">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="border-top-0 fs-7 font-monospace">
+                  <tr th:if="${#lists.isEmpty(ticketsHistorial)}">
+                    <td colspan="6" class="text-center py-5 text-muted">
+                      <i
+                        class="fi fi-rr-folder-open display-4 opacity-25 d-block mb-3"
+                      ></i>
+                      No hay registros en el historial.
+                    </td>
+                  </tr>
+                  <tr
+                    th:each="tk : ${ticketsHistorial}"
+                    class="tr-incidencia"
+                    th:data-estado="${tk.estado}"
+                  >
+                    <td class="px-4">
+                      <span class="fw-bold text-dark d-block"
+                        >INC-[[${tk.id}]]</span
+                      >
+                      <small
+                        class="text-muted"
+                        th:text="${#temporals.format(tk.fechaReporte, 'dd/MM/yyyy HH:mm')}"
+                      ></small>
+                    </td>
+
+                    <td>
+                      <span
+                        class="fw-bold text-dark d-block text-truncate"
+                        style="max-width: 250px"
+                        th:text="${tk.titulo}"
+                        >Título</span
+                      >
+                      <small class="text-muted"
+                        ><i class="fi fi-rr-user"></i>
+                        [[${tk.usuarioReporta.username}]]</small
+                      >
+                    </td>
+
+                    <td>
+                      <span
+                        class="badge bg-light border text-dark"
+                        th:text="${tk.tipo}"
+                        >ÁREA</span
+                      >
+                    </td>
+
+                    <td>
+                      <span
+                        class="badge"
+                        th:classappend="${tk.nivelGravedad == 'EMERGENCIA'} ? 'bg-danger text-white' : (${tk.nivelGravedad == 'MEDIO'} ? 'bg-warning text-dark' : 'bg-info text-dark')"
+                        th:text="${tk.nivelGravedad}"
+                        >GRAVEDAD</span
+                      >
+                    </td>
+
+                    <td class="text-center">
+                      <span
+                        class="badge"
+                        th:classappend="${tk.estado == 'RESUELTO'} ? 'bg-success' : 'bg-secondary'"
+                        th:text="${tk.estado}"
+                        >ESTADO</span
+                      >
+                    </td>
+
+                    <td class="px-4 text-center">
+                      <button
+                        class="btn btn-light btn-sm border rounded-3 text-primary shadow-sm"
+                        th:data-id="${tk.id}"
+                        th:data-titulo="${tk.titulo}"
+                        th:data-desc="${tk.descripcion}"
+                        th:data-usuario="${tk.usuarioReporta.username}"
+                        th:data-fecha="${#temporals.format(tk.fechaReporte, 'dd/MM/yyyy HH:mm')}"
+                        th:data-fecha-res="${tk.fechaResolucion != null ? #temporals.format(tk.fechaResolucion, 'dd/MM/yyyy HH:mm') : 'N/A'}"
+                        th:data-respuesta="${tk.respuestaAdmin != null ? tk.respuestaAdmin : 'Aún sin respuesta.'}"
+                        th:data-estado="${tk.estado}"
+                        onclick="abrirModalDetalle(this)"
+                        title="Ver Detalles"
+                      >
+                        <i class="fi fi-rr-eye"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="modal-header bg-light border-bottom p-4">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" id="mEstadoBadge">ESTADO</span>
+                <h5 class="fw-bold text-dark mb-0" id="mTitulo">
+                  Título del Problema
+                </h5>
+              </div>
+              <div class="fs-8 font-monospace text-muted d-flex gap-3 mt-2">
+                <span id="mUsuario"><i class="fi fi-rr-user"></i> Usuario</span>
+                <span id="mFecha"
+                  ><i class="fi fi-rr-calendar"></i> Fecha Reporte</span
+                >
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-close shadow-none"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body p-4 bg-body">
+            <div class="row g-4">
+              <div class="col-12">
+                <h6
+                  class="fw-bold text-uppercase fs-8 text-secondary tracking-wider mb-2"
+                >
+                  Descripción del Reporte:
+                </h6>
+                <div
+                  class="p-3 bg-white border rounded-3 text-dark fs-7 shadow-sm"
+                  id="mDesc"
+                  style="white-space: pre-wrap"
+                ></div>
+              </div>
+
+              <div class="col-12">
+                <div
+                  class="p-4 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-4 shadow-sm"
+                  id="cajaResolucion"
+                >
+                  <h6
+                    class="fw-bold text-success fs-7 mb-2 text-uppercase tracking-wider"
+                  >
+                    <i class="fi fi-rr-comment-check"></i> Resolución del
+                    Administrador
+                  </h6>
+                  <p
+                    class="mb-2 text-dark fs-7 font-monospace"
+                    id="mRespuesta"
+                    style="white-space: pre-wrap"
+                  ></p>
+                  <small
+                    class="text-success fw-bold font-monospace fs-8"
+                    id="mFechaRes"
+                  ></small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light p-3 border-top">
+            <button
+              type="button"
+              class="btn btn-dark px-4 fs-7 font-monospace fw-semibold"
+              data-bs-dismiss="modal"
+            >
+              Cerrar Detalle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+
+    <script>
+      // Filtro de Tabla JS
+      function filtrarTabla() {
+        const inputStr = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const estadoFilter = document.getElementById("filterEstado").value;
+        const filas = document.querySelectorAll(".tr-incidencia");
+
+        filas.forEach((fila) => {
+          const textoFila = fila.innerText.toLowerCase();
+          const estadoFila = fila.getAttribute("data-estado");
+
+          const coincideTexto = textoFila.includes(inputStr);
+          const coincideEstado =
+            estadoFilter === "TODOS" || estadoFila === estadoFilter;
+
+          if (coincideTexto && coincideEstado) {
+            fila.style.display = "";
+          } else {
+            fila.style.display = "none";
+          }
+        });
+      }
+
+      // Llenado del Modal de Detalles
+      function abrirModalDetalle(btn) {
+        document.getElementById("mTitulo").innerText =
+          btn.getAttribute("data-titulo");
+        document.getElementById("mDesc").innerText =
+          btn.getAttribute("data-desc");
+        document.getElementById("mUsuario").innerHTML =
+          `<i class="fi fi-rr-user"></i> Reportado por: ${btn.getAttribute("data-usuario")}`;
+        document.getElementById("mFecha").innerHTML =
+          `<i class="fi fi-rr-calendar"></i> Reporte: ${btn.getAttribute("data-fecha")}`;
+
+        const estado = btn.getAttribute("data-estado");
+        const badge = document.getElementById("mEstadoBadge");
+        badge.innerText = estado;
+
+        const cajaRes = document.getElementById("cajaResolucion");
+
+        if (estado === "RESUELTO") {
+          badge.className = "badge bg-success";
+          cajaRes.style.display = "block";
+          document.getElementById("mRespuesta").innerText =
+            btn.getAttribute("data-respuesta");
+          document.getElementById("mFechaRes").innerText =
+            "Resuelto el: " + btn.getAttribute("data-fecha-res");
+        } else {
+          badge.className = "badge bg-secondary";
+          cajaRes.style.display = "none";
+        }
+
+        new bootstrap.Modal(document.getElementById("modalDetalle")).show();
+      }
+    </script>
+  </body>
+</html>
