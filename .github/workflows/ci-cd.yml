@@ -1,14 +1,14 @@
-name: Java Continuous Integration
+name: Java CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ] # El flujo de CD se activa principalmente al consolidar en main
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
 
 jobs:
   # =======================================================
-  # FASE 1: VERIFICACIÓN E INTEGRIDAD DE ARCHIVOS
+  # FASE 1: VERIFICACIÓN E INTEGRIDAD DE ARCHIVOS (CI)
   # =======================================================
   check-files:
     name: Check Repository Files
@@ -20,11 +20,10 @@ jobs:
     - name: Verify Project Structure
       run: |
         echo "Verificando estructura de Spring Boot y Thymeleaf..."
-        ls -la
         test -f pom.xml && echo "pom.xml detectado correctamente."
 
   # =======================================================
-  # FASE 2: COMPILACIÓN Y VALIDACIÓN DEL PROYECTO
+  # FASE 2: COMPILACIÓN Y VALIDACIÓN (CI)
   # =======================================================
   validate-backend:
     name: Validate & Compile Architecture
@@ -45,14 +44,12 @@ jobs:
       run: mvn clean compile
 
   # =======================================================
-  # FASE 3: EJECUCIÓN DE PRUEBAS AUTOMATIZADAS Y REPORTES
+  # FASE 3: EJECUCIÓN DE PRUEBAS Y REPORTES (CI)
   # =======================================================
   run-reports:
     name: Run Automated Tests & Generate Reports
     runs-on: ubuntu-latest
     needs: validate-backend
-    
-    # Levanta la base de datos idéntica a tu .env para el test de contexto
     services:
       postgres:
         image: postgres:16
@@ -67,7 +64,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
     - name: Checkout source code
       uses: actions/checkout@v4
@@ -81,7 +77,6 @@ jobs:
 
     - name: Execute Application Tests
       env:
-        # Inyección exacta de tu .env para que Spring Boot levante sin errores
         DB_HOST: localhost
         DB_PORT: 5432
         DB_NAME: Polleria_Latina_DB
@@ -94,7 +89,7 @@ jobs:
       run: mvn test
 
   # =======================================================
-  # FASE 4: EMPAQUETADO MIXTO (BACKEND + THYMELEAF)
+  # FASE 4: EMPAQUETADO MIXTO (CI)
   # =======================================================
   package-application:
     name: Package Unified Monolith (.JAR)
@@ -113,3 +108,33 @@ jobs:
 
     - name: Build Final Package (Skip Tests)
       run: mvn package -DskipTests
+
+    # CRUCIAL PARA CD: Guarda el archivo .jar generado para que el siguiente Job pueda usarlo
+    - name: Upload Build Artifact for Deployment
+      uses: actions/upload-artifact@v4
+      with:
+        name: polleria-latina-artifact
+        path: target/*.jar
+        retention-days: 1
+
+  # =======================================================
+  # FASE 5: ENTREGA CONTINUA / DESPLIEGUE (CD)
+  # =======================================================
+  deploy-application:
+    name: Continuous Delivery & Release
+    runs-on: ubuntu-latest
+    needs: package-application
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # Solo se ejecuta al hacer push definitivo en main
+    steps:
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: polleria-latina-artifact
+        path: deployment/
+
+    - name: Simulate Cloud Deployment Integration
+      run: |
+        echo "Iniciando proceso de Entrega Continua (CD)..."
+        echo "Artefacto listo para distribución en entorno de producción."
+        ls -la deployment/
+        echo "Despliegue simulado exitosamente. El sistema está listo para operar."
