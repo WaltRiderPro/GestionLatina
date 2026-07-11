@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthController {
 
+  // Inyección de dependencias
   private final UsuarioRepository usuarioRepository;
   private final EmailService emailService;
   private final PasswordEncoder passwordEncoder;
