@@ -35,9 +35,20 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
   @Override
   @Transactional
   public Pedido procesarNuevaComanda(PedidoRequestDTO request, String usernameCajero) {
-
     Usuario cajero = usuarioRepository.findByUsername(usernameCajero)
         .orElseThrow(() -> new RuntimeException("Cajero no autorizado o sesión inválida."));
+
+    if (request.getItems() == null || request.getItems().isEmpty()) {
+      throw new RuntimeException("El carrito está vacío. Agregue al menos un producto.");
+    }
+
+    String tipoComprobante = request.getTipoComprobante() != null && !request.getTipoComprobante().isBlank()
+        ? request.getTipoComprobante().toUpperCase()
+        : "TICKET";
+
+    if (request.getModalidad() == null || request.getModalidad().isBlank()) {
+      throw new RuntimeException("Debe indicar la modalidad de venta.");
+    }
 
     Pedido pedido;
     double totalBruto = 0.0;
@@ -50,6 +61,7 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
 
       if (request.isRequiereCobroInmediato()) {
         pedido.setEstado("PAGADO");
+        pedido.setFechaCompletado(LocalDateTime.now());
 
         if (pedido.getMesa() != null) {
           Mesa mesa = pedido.getMesa();
@@ -57,9 +69,7 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
           mesaRepository.save(mesa);
         }
       }
-    }
-
-    else {
+    } else {
       pedido = Pedido.builder()
           .nombreCliente(request.getNombreCliente() != null && !request.getNombreCliente().trim().isEmpty()
               ? request.getNombreCliente()
@@ -115,12 +125,20 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
     Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
     if (request.isRequiereCobroInmediato()) {
+      String serieComprobante = switch (tipoComprobante) {
+        case "BOLETA" -> "B001";
+        case "FACTURA" -> "F001";
+        default -> "TCK";
+      };
+
       Venta venta = Venta.builder()
           .pedido(pedidoGuardado)
-          .tipoComprobante(request.getTipoComprobante())
-          .numeroComprobante("TICKET-000" + pedidoGuardado.getId()) // Generador temporal
+          .tipoComprobante(tipoComprobante)
+          .numeroComprobante(serieComprobante + "-" + String.format("%07d", pedidoGuardado.getId()))
           .documentoCliente(request.getDocumentoCliente())
-          .metodoPago(request.getMetodoPago())
+          .metodoPago(request.getMetodoPago() != null && !request.getMetodoPago().isBlank()
+              ? request.getMetodoPago().toUpperCase()
+              : "EFECTIVO")
           .montoTotal(totalBruto)
           .fechaEmision(LocalDateTime.now())
           .cajero(cajero)

@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:replace="~{components/head :: head}"></th:block>
+    <title>Ventas | Pollería Latina</title>
+    <style>
+      .sales-page .container-fluid {
+        padding-bottom: 28px;
+      }
+
+      .sales-hero,
+      .sales-card {
+        border: 1px solid var(--bs-border-color);
+        border-radius: 24px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04);
+      }
+
+      .sales-hero {
+        background:
+          radial-gradient(circle at top right, rgba(var(--bs-success-rgb), 0.18), transparent 30%),
+          linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.08), rgba(var(--bs-success-rgb), 0.05));
+      }
+
+      .sales-kpi {
+        min-height: 118px;
+      }
+
+      .sales-kpi .kpi-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--bs-success-rgb), 0.12);
+        color: var(--bs-success);
+      }
+
+      .sales-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: var(--bs-success);
+      }
+
+      .sales-value {
+        font-size: 1.9rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .soft-pill {
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .sales-table thead th {
+        white-space: nowrap;
+        border-bottom-color: var(--bs-border-color);
+      }
+
+      .sales-table tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .sales-badge {
+        border-radius: 999px;
+        padding: 0.3rem 0.65rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .sales-method-list .list-group-item {
+        border-color: var(--bs-border-color);
+      }
+
+      @media (max-width: 575.98px) {
+        .sales-hero,
+        .sales-card {
+          border-radius: 20px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page-layout">
+      <th:block th:replace="~{components/header :: header}"></th:block>
+      <th:block th:replace="~{components/sidebar :: sidebar}"></th:block>
+
+      <main class="app-wrapper sales-page">
+        <div class="container-fluid py-3 py-lg-4 px-3 px-xl-4">
+          <div class="sales-hero p-3 p-xl-4 mb-3 mb-xl-4">
+            <div class="row g-4 align-items-center">
+              <div class="col-xl-7">
+                <div class="sales-label mb-2">Operación</div>
+                <h1 class="display-6 fw-bold mb-2">Módulo de Ventas</h1>
+                <p class="text-secondary mb-3">
+                  Revisa comprobantes emitidos, filtra por fecha o método de pago y
+                  abre el detalle de cada venta sin salir del sistema.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                  <a th:href="@{/punto-venta}" class="btn btn-success rounded-pill px-3">
+                    <i class="fi fi-rr-cash-register me-1"></i> Abrir caja
+                  </a>
+                  <a th:href="@{/dashboard}" class="btn btn-outline-secondary rounded-pill px-3">
+                    <i class="fi fi-rr-home me-1"></i> Volver al dashboard
+                  </a>
+                </div>
+              </div>
+
+              <div class="col-xl-5">
+                <div class="row g-2 g-lg-3">
+                  <div class="col-6">
+                    <div class="bg-body rounded-4 p-3 border h-100">
+                      <div class="text-muted small">Resultados</div>
+                      <div class="fw-bold fs-5" th:text="${resumen.totalVentas}">0</div>
+                      <div class="text-secondary small mt-1">Ventas visibles con el filtro actual</div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="bg-body rounded-4 p-3 border h-100">
+                      <div class="text-muted small">Monto total</div>
+                      <div class="fw-bold fs-5" th:text="|S/ ${#numbers.formatDecimal(resumen.montoTotal, 1, 'POINT', 2, 'COMMA')}|">S/ 0.00</div>
+                      <div class="text-secondary small mt-1">Acumulado en los resultados</div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="bg-body rounded-4 p-3 border h-100">
+                      <div class="text-muted small">Ventas hoy</div>
+                      <div class="fw-bold fs-5" th:text="${resumen.ventasHoy}">0</div>
+                      <div class="text-secondary small mt-1" th:text="|S/ ${#numbers.formatDecimal(resumen.montoHoy, 1, 'POINT', 2, 'COMMA')}|">S/ 0.00</div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="bg-body rounded-4 p-3 border h-100">
+                      <div class="text-muted small">Ticket promedio</div>
+                      <div class="fw-bold fs-5" th:text="|S/ ${#numbers.formatDecimal(resumen.ticketPromedio, 1, 'POINT', 2, 'COMMA')}|">S/ 0.00</div>
+                      <div class="text-secondary small mt-1">Promedio por comprobante</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 g-xl-4 mb-3 mb-xl-4">
+            <div class="col-md-6 col-xl-3">
+              <div class="card sales-card sales-kpi h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div class="sales-label mb-2">Ventas mes</div>
+                      <div class="sales-value" th:text="${resumen.ventasMes}">0</div>
+                    </div>
+                    <div class="kpi-icon"><i class="fi fi-rr-chart-mixed"></i></div>
+                  </div>
+                  <div class="text-secondary small mt-3">Comprobantes emitidos en el mes actual</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+              <div class="card sales-card sales-kpi h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div class="sales-label mb-2">Monto mes</div>
+                      <div class="sales-value" th:text="|S/ ${#numbers.formatDecimal(resumen.montoMes, 1, 'POINT', 2, 'COMMA')}|">S/ 0.00</div>
+                    </div>
+                    <div class="kpi-icon"><i class="fi fi-rr-wallet"></i></div>
+                  </div>
+                  <div class="text-secondary small mt-3">Total facturado en ventas del mes</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+              <div class="card sales-card sales-kpi h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div class="sales-label mb-2">Filtros activos</div>
+                      <div class="sales-value" th:text="${resumen.filtroTexto != '' || resumen.filtroMetodoPago != '' || resumen.filtroDesde != '' || resumen.filtroHasta != '' ? 'Sí' : 'No'}">No</div>
+                    </div>
+                    <div class="kpi-icon"><i class="fi fi-rr-filter"></i></div>
+                  </div>
+                  <div class="text-secondary small mt-3">Los resultados se actualizan al consultar</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-xl-3">
+              <div class="card sales-card sales-kpi h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                  <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div class="sales-label mb-2">Acciones rápidas</div>
+                      <div class="sales-value" style="font-size: 1.25rem">Caja</div>
+                    </div>
+                    <div class="kpi-icon"><i class="fi fi-rr-shopping-cart"></i></div>
+                  </div>
+                  <div class="text-secondary small mt-3">Ve al POS para registrar una nueva venta</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card sales-card mb-3">
+            <div class="card-body p-4">
+              <form method="get" th:action="@{/ventas}" class="row g-3 align-items-end">
+                <div class="col-lg-4">
+                  <label class="form-label fw-semibold">Buscar</label>
+                  <input
+                    type="text"
+                    name="q"
+                    class="form-control"
+                    placeholder="Comprobante, cliente, cajero o mesa"
+                    th:value="${resumen.filtroTexto}"
+                  />
+                </div>
+                <div class="col-md-3 col-lg-2">
+                  <label class="form-label fw-semibold">Desde</label>
+                  <input type="date" name="desde" class="form-control" th:value="${resumen.filtroDesde}" />
+                </div>
+                <div class="col-md-3 col-lg-2">
+                  <label class="form-label fw-semibold">Hasta</label>
+                  <input type="date" name="hasta" class="form-control" th:value="${resumen.filtroHasta}" />
+                </div>
+                <div class="col-md-3 col-lg-2">
+                  <label class="form-label fw-semibold">Pago</label>
+                  <select name="metodoPago" class="form-select">
+                    <option th:each="metodo : ${metodosPago}" th:value="${metodo}" th:text="${metodo}" th:selected="${metodo == resumen.filtroMetodoPago or (metodo == 'TODOS' and resumen.filtroMetodoPago == '')}">
+                      TODOS
+                    </option>
+                  </select>
+                </div>
+                <div class="col-lg-2 d-flex gap-2">
+                  <button class="btn btn-success flex-grow-1" type="submit">
+                    <i class="fi fi-rr-search me-1"></i> Filtrar
+                  </button>
+                  <a th:href="@{/ventas}" class="btn btn-outline-secondary">
+                    <i class="fi fi-rr-refresh"></i>
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="row g-3 g-xl-4 align-items-start">
+            <div class="col-xl-8">
+              <div class="card sales-card">
+                <div class="card-body p-4">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                      <div class="sales-label mb-1">Comprobantes</div>
+                      <h4 class="mb-0 fw-bold">Ventas registradas</h4>
+                    </div>
+                    <span class="soft-pill bg-success-subtle text-success">
+                      <span th:text="${resumen.totalVentas}">0</span> resultados
+                    </span>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 sales-table table-sm">
+                      <thead>
+                        <tr class="text-secondary small">
+                          <th>Comprobante</th>
+                          <th>Cliente</th>
+                          <th>Modalidad</th>
+                          <th>Método</th>
+                          <th>Fecha</th>
+                          <th class="text-end">Total</th>
+                          <th class="text-end">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr th:if="${#lists.isEmpty(resumen.ventas)}">
+                          <td colspan="7" class="text-center text-secondary py-4">
+                            No hay ventas para los filtros actuales.
+                          </td>
+                        </tr>
+                        <tr th:each="venta : ${resumen.ventas}">
+                          <td>
+                            <div class="fw-semibold" th:text="${venta.numeroComprobante}">TCK-0000001</div>
+                            <small class="text-secondary" th:text="${venta.tipoComprobante}">TICKET</small>
+                          </td>
+                          <td>
+                            <div class="fw-semibold" th:text="${venta.pedido != null ? venta.pedido.nombreCliente : 'Sin cliente'}">Cliente</div>
+                            <small class="text-secondary" th:text="${venta.cajero != null ? venta.cajero.nombre + ' ' + venta.cajero.apellidos : '-'}">Cajero</small>
+                          </td>
+                          <td th:text="${venta.pedido.modalidad}">LOCAL</td>
+                          <td>
+                            <span class="badge rounded-pill bg-light text-dark" th:text="${venta.metodoPago}">EFECTIVO</span>
+                          </td>
+                          <td class="text-secondary" th:text="${#temporals.format(venta.fechaEmision, 'dd MMM yyyy, HH:mm')}">11 jul 2026, 17:20</td>
+                          <td class="text-end fw-semibold" th:text="|S/ ${#numbers.formatDecimal(venta.montoTotal, 1, 'POINT', 2, 'COMMA')}|">S/ 0.00</td>
+                          <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-success" th:onclick="'abrirVenta(' + ${venta.id} + ')'">
+                              Ver detalle
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xl-4">
+              <div class="card sales-card mb-3">
+                <div class="card-body p-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <div class="sales-label mb-1">Métodos de pago</div>
+                      <h5 class="mb-0 fw-bold">Distribución actual</h5>
+                    </div>
+                  </div>
+
+                  <div th:if="${#maps.isEmpty(resumen.ventasPorMetodoPago)}" class="text-secondary">
+                    No hay datos para mostrar.
+                  </div>
+
+                  <div class="list-group list-group-flush sales-method-list" th:if="${!#maps.isEmpty(resumen.ventasPorMetodoPago)}">
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center" th:each="entry : ${resumen.ventasPorMetodoPago}">
+                      <span class="fw-semibold" th:text="${entry.key}">EFECTIVO</span>
+                      <span class="soft-pill bg-light text-dark" th:text="${entry.value} + ' ventas'">0 ventas</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card sales-card">
+                <div class="card-body p-4">
+                  <div class="sales-label mb-1">Ayuda rápida</div>
+                  <h5 class="fw-bold mb-3">Qué puedes hacer aquí</h5>
+                  <ul class="text-secondary mb-0 ps-3">
+                    <li class="mb-2">Filtrar comprobantes por cliente, fecha o método de pago.</li>
+                    <li class="mb-2">Abrir el detalle de cada venta para revisar items y notas.</li>
+                    <li class="mb-2">Ir al punto de venta cuando necesites registrar una nueva operación.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <th:block th:replace="~{components/footer :: footer}"></th:block>
+    </div>
+
+    <div class="modal fade" id="ventaDetalleModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+          <div class="modal-header">
+            <div>
+              <div class="sales-label mb-1">Detalle de venta</div>
+              <h5 class="modal-title fw-bold mb-0" id="ventaModalTitulo">Comprobante</h5>
+            </div>
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="border rounded-4 p-3 h-100">
+                  <div class="text-secondary small">Comprobante</div>
+                  <div class="fw-bold" id="ventaModalComprobante">-</div>
+                  <div class="text-secondary small" id="ventaModalTipo">-</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="border rounded-4 p-3 h-100">
+                  <div class="text-secondary small">Cliente</div>
+                  <div class="fw-bold" id="ventaModalCliente">-</div>
+                  <div class="text-secondary small" id="ventaModalMesa">-</div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="border rounded-4 p-3 h-100">
+                  <div class="text-secondary small">Cobro</div>
+                  <div class="fw-bold" id="ventaModalMetodo">-</div>
+                  <div class="text-secondary small" id="ventaModalFecha">-</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table align-middle sales-table table-sm">
+                <thead>
+                  <tr class="text-secondary small">
+                    <th>Producto</th>
+                    <th class="text-end">Cantidad</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-end">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody id="ventaModalItems"></tbody>
+              </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3 border-top pt-3">
+              <div>
+                <div class="text-secondary small">Cajero</div>
+                <div class="fw-semibold" id="ventaModalCajero">-</div>
+                <div class="text-secondary small" id="ventaModalNotas">-</div>
+              </div>
+              <div class="text-end">
+                <div class="text-secondary small">Total</div>
+                <div class="fw-bold fs-4 text-success" id="ventaModalTotal">S/ 0.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <th:block th:replace="~{components/scripts :: scripts}"></th:block>
+    <script>
+      async function abrirVenta(id) {
+        try {
+          const response = await fetch(`/ventas/api/${id}`);
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || "No fue posible cargar la venta.");
+          }
+
+          document.getElementById("ventaModalTitulo").innerText = data.numeroComprobante;
+          document.getElementById("ventaModalComprobante").innerText = data.numeroComprobante;
+          document.getElementById("ventaModalTipo").innerText = data.tipoComprobante;
+          document.getElementById("ventaModalCliente").innerText = data.cliente || "Cliente general";
+          document.getElementById("ventaModalMesa").innerText = `${data.modalidad || "Sin modalidad"} - ${data.mesa || "Sin mesa"}`;
+          document.getElementById("ventaModalMetodo").innerText = data.metodoPago;
+          document.getElementById("ventaModalFecha").innerText = data.fechaEmision;
+          document.getElementById("ventaModalCajero").innerText = data.cajero || "-";
+          document.getElementById("ventaModalNotas").innerText = data.notas || "";
+          document.getElementById("ventaModalTotal").innerText = `S/ ${Number(data.montoTotal || 0).toFixed(2)}`;
+
+          const tbody = document.getElementById("ventaModalItems");
+          tbody.innerHTML = "";
+          (data.items || []).forEach((item) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td class="fw-semibold">${item.nombre}</td>
+              <td class="text-end">${item.cantidad}</td>
+              <td class="text-end">S/ ${Number(item.precio || 0).toFixed(2)}</td>
+              <td class="text-end fw-semibold">S/ ${Number(item.subtotal || 0).toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          bootstrap.Modal.getOrCreateInstance(document.getElementById("ventaDetalleModal")).show();
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+    </script>
+  </body>
+</html>

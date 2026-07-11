@@ -644,7 +644,8 @@
 
           metodoPago:
             document.getElementById("selMetodoPago")?.value || "EFECTIVO",
-          tipoComprobante: "TICKET",
+          tipoComprobante:
+            document.getElementById("selTipoComprobante")?.value || "TICKET",
           documentoCliente: document
             .getElementById("iptDocCliente")
             .value.trim(),

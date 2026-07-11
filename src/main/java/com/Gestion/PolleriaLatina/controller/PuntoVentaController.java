@@ -59,12 +59,15 @@ public class PuntoVentaController {
     try {
       String usernameCajero = auth.getName();
       var pedidoGuardado = puntoVentaService.procesarNuevaComanda(request, usernameCajero);
+      String mensaje = request.isRequiereCobroInmediato()
+          ? ("LOCAL".equalsIgnoreCase(request.getModalidad()) && request.getPedidoId() != null
+              ? "Cobro realizado y mesa liberada."
+              : "Cobro realizado y venta registrada.")
+          : "Mesa aperturada y enviada a cocina.";
 
       return ResponseEntity.ok(Map.of(
           "status", "success",
-          "message",
-          request.isRequiereCobroInmediato() ? "Cobro realizado y mesa liberada."
-              : "Mesa aperturada y enviada a cocina.",
+          "message", mensaje,
           "pedidoId", pedidoGuardado.getId()));
 
     } catch (Exception e) {
